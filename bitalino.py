@@ -269,7 +269,6 @@ class BITalino(object):
         .. note:: *The sequence number overflows at 15 
         """
 
-        print 'Starting to debug the read function'
         if (self.started):
             nChannels = len(self.analogChannels)
             
@@ -280,7 +279,6 @@ class BITalino(object):
             
             dataAcquired = numpy.zeros((nSamples, 5 + nChannels))
             for sample in range(nSamples):
-                print sample
                 Data = self.receive(number_bytes)
                 decodedData = list(struct.unpack(number_bytes*"B ", Data))
                 crc = decodedData[-1] & 0x0F
@@ -348,8 +346,6 @@ class BITalino(object):
 
         while len(data) < nbytes:
             data += reader(1)
-
-        print data
         return data
             
 

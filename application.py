@@ -1,6 +1,8 @@
 
 from bitalino import BITalino
 
+import pdb
+
 
 if __name__ == '__main__':
 
@@ -28,15 +30,17 @@ if __name__ == '__main__':
                 
         # Start Acquisition
         device.start(samplingRate, acqChannels)
-        
+        device.socket.settimeout(5)
+
         # Acquisition Loop
         while True:
             try:
                 device.read(nSamples)
+                print device.socket.gettimeout()
                 
             except Exception as e:
                 print e
-                device.stop()
+                #device.stop()
                 device.close()
                 break
         
