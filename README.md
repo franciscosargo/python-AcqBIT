@@ -1,2 +1,2 @@
-# Application for handling of robust continuous acuisition for bitalino devices
+# Application for robust continuous acquisition handling for bitalino devices
 
