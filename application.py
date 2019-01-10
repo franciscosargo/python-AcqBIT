@@ -32,16 +32,18 @@ from bitalino import BITalino
 import biosppy
 from biosppy import storage
 import h5py as h5
-import pystray
-
 from PIL import Image, ImageDraw
-from stray import icon
+from pystray import MenuItem as item
+import pystray
+from PIL import Image
 
+print 'Hello'
 def _process(macAddress, setup):
     """
 		Main logic for the acquisition loop.
 	"""
 
+    # Create directory
     path_name = os.path.join('~', 'Desktop', 'test', macAddress.replace(':', '-'))   
     user = os.path.expanduser(path_name)
     path_to_save = os.path.expanduser(path_name)
@@ -97,8 +99,20 @@ def start_process(macAddress, setup):
     Utility function to start acquisition from each device in a single process
     """
 
+    # Start process
     p = multiprocessing.Process(target=_process, args=(macAddress, setup))
     p.start()
+
+    return p
+
+def stop():
+    """ 
+    Stops entire acquisition upon system tray menu interaction
+    """
+    for p in process_list:
+        p.terminate()
+    icon.stop()
+
 
 if __name__ == '__main__':
  
@@ -107,10 +121,25 @@ if __name__ == '__main__':
         data = json.load(json_data_file)
         print(data)
     
+    # Start acquisition
     devices = data['devices']
-
+    process_list = []
     for d in devices.keys():
-        start_process(d, devices[d])
+        # Start process
+        p = multiprocessing.Process(target=_process, args=(d, devices[d]))
+        p.start()
+        process_list.append(p)
+
+    # Create Icon
+    image = Image.open("BITALINO-logo.png")
+    icon = pystray.Icon("name", image)
+    icon_menu = [item(d, lambda func: process_list[i].terminate())
+                 for i, d in enumerate(devices.keys())]
+    icon_menu = icon_menu + [item("Stop Acquisition", stop)]
+    icon.menu = icon_menu
+
+    icon.run()
+    icon.stop()
     
 
     
