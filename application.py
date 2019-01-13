@@ -23,21 +23,34 @@
 # Python
 import time
 import os
-import pdb
 import multiprocessing 
 import json
 
 # Third Party
-from bitalino import BITalino
-import biosppy
-from biosppy import storage
+import bitalino as bt
 import h5py as h5
-from PIL import Image, ImageDraw
-from pystray import MenuItem as item
 import pystray
+from pystray import MenuItem as item
 from PIL import Image
 
-print 'Hello'
+
+if 0:
+     import UserList
+     import UserString
+     import UserDict
+     import itertools
+     import collections
+     import future.backports.misc
+     import commands
+     import base64
+     import __buildin__
+     import math
+     import reprlib
+     import functools
+     import re
+     import subprocess
+
+
 def _process(macAddress, setup):
     """
 		Main logic for the acquisition loop.
@@ -63,7 +76,7 @@ def _process(macAddress, setup):
         ## Connection Loop
         while True:
             try:
-                device = BITalino(macAddress)  # connect to BITalino
+                device = bt.BITalino(macAddress)  # connect to BITalino
                 print device.version()
                 break
             except Exception as e:
