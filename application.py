@@ -20,116 +20,43 @@
  
 """
 
-# Python
-import time
+# Native
+import datetime
 import os
 import multiprocessing 
 import json
 
 # Third Party
+import numpy as np
 import bitalino as bt
-import h5py as h5
 import pystray
 from pystray import MenuItem as item
 from PIL import Image
 
+# Local
+import int_out as io
 
-if 0:
-     import UserList
-     import UserString
-     import UserDict
-     import itertools
-     import collections
-     import future.backports.misc
-     import commands
-     import base64
-     import __buildin__
-     import math
-     import reprlib
-     import functools
-     import re
-     import subprocess
+stop
 
-def open_h5file(macAddress, nSamples, path_to_save):
-    """ 
-    Utility function to open and setup a maximum 2 hours duration h5 file for the acquisition
-    """
-
-    # Open file
-    filename = time.strftime("test_%Y-%m-%d_%H-%M-%S", time.gmtime()) + '.h5'
-    file_path = os.path.join(path_to_save, filename)
-
-    # Open file
-    f = h5.File(file_path, 'w')
-
-    # Create the datasets according to OpenSignals standard
-    root_group_name = macAddress + '/'
-    r_grp = f.create_group(root_group_name)
-
-    # Digital
-    r_grp.create_dataset('digital/digital_1', dtype='uint16', shape=(nSamples, 1), maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-    r_grp.create_dataset('digital/digital_2', dtype='uint16', shape=(nSamples, 1), maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-    r_grp.create_dataset('digital/digital_3', dtype='uint16', shape=(nSamples, 1), maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-    r_grp.create_dataset('digital/digital_4', dtype='uint16', shape=(nSamples, 1), maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-
-    # Analog
-    r_grp.create_dataset('raw/channel_1', dtype='uint16', shape=(nSamples, 1), maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-    r_grp.create_dataset('raw/channel_2', dtype='uint16', shape=(nSamples, 1), maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-    r_grp.create_dataset('raw/channel_3', dtype='uint16', shape=(nSamples, 1), maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-    r_grp.create_dataset('raw/channel_4', dtype='uint16', shape=(nSamples, 1), maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-    r_grp.create_dataset('raw/channel_5', dtype='uint16', shape=(nSamples, 1),maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-    r_grp.create_dataset('raw/channel_6', dtype='uint16', shape=(nSamples, 1), maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-    r_grp.create_dataset('raw/nSeq', dtype='uint16', shape=(nSamples, 1),  maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-
-    # Events
-    #r_grp.create_dataset('events/digital', dtype='uint32', shape= maxshape=(2*60*60*nSamples, 4), chunks=(512, 4))
-    #r_grp.create_dataset('raw/sync', dtype='uint32', maxshape=(2*60*60*nSamples, 4), chunks=(512, 4))
-
-    return f
-
-def write_h5file(macAddress, file_object, signal):
-    """ 
-    Utility function to open and write to a previously opened h5 file for the acquisition
-    """
-
-    # Create the datasets according to OpenSignals standard
-    root_group_name = macAddress + '/'
-    r_grp = file_object[root_group_name]
-
-    # Extract channels information
-    digital_1 = signal[:, 0]
-    digital_2 = signal[:, 1]
-    digital_3 = signal[:, 2]
-    digital_4 = signal[:, 4]
-
-
-    # 
-
-    # 
-
-
-
-def _process(macAddress, setup):
+def _process(path_to_save, macAddress, setup):
     """
 		Main logic for the acquisition loop.
 	"""
 
-    # Create directory
-    path_name = os.path.join('~', 'Desktop', 'test', macAddress.replace(':', '-'))   
-    user = os.path.expanduser(path_name)
-    path_to_save = os.path.expanduser(path_name)
-
-    if not os.path.exists(path_to_save):
-        os.makedirs(path_to_save)
-    
-    # Set Characteristics of the acquisition
+    # Set metadata for the acquisition
     batteryThreshold = setup['batteryThreshold']
     acqChannels = setup['acqChannels']
+    acqLabels = setup['acqLabels']
     samplingRate = setup['samplingRate']
     nSamples = setup['nSamples']
     digitalOutput = setup['digitalOutput']
+    syncInterval = setup['syncInterval']  # minutes
+    deviceName = setup['deviceName']
+    resolution = setup['resolution']
+
+    sync_datetime = datetime.timedelta(minutes=syncInterval)
     nChannels = len(digitalOutput) + len(acqChannels)
-    
+
     while True:
         ## Connection Loop
         while True:
@@ -145,18 +72,31 @@ def _process(macAddress, setup):
         device.start(samplingRate, acqChannels)
         device.socket.settimeout(5)
 
+        # Get initial time of acquisition
+        i_time_acq = datetime.datetime.now()
+        i_time = i_time_acq 
+        
         # Acquisition Loop
-        with open_h5file(macAddress, nSamples, path_to_save) as f:
-             # create dataset with maximum size of 2 hours
+        with int_out.open_h5file(path_to_save,  macAddress, acqChannels, acqLabels, nSamples) as f:
 
+            # Acquisition iteration
             for i in xrange(0, 2*60*60):
                 try:
-                    signal = device.read(nSamples) 
-                    dataset.resize(((i+1)*nSamples, nChannels + 1))
-                    dataset[i*nSamples:(i+1)*nSamples, :] = signal
-    
+                    dataAcquired = device.read(nSamples) 
+                    int_out.write_h5file(f, macAddress, dataAcquired, acqChannels, i, nSamples)
+
+                    # Check for synchronization
+                    if datetime.datetime.now()- i_time >= sync_datetime and setup['master']:
+
+                        digitalArray = [int(not bool(dg_val))
+                                        for dg_val in digitalOutput]
+                        device.trigger(digitalArray=digitalArray)
+                        digitalOutput = digitalArray
+
+
                 except Exception as e:
                     print e
+                    int_out.close_file(f, setup, i_time_acq, i)
                     break
         
         device.close()
@@ -176,24 +116,32 @@ def stop():
     """ 
     Stops entire acquisition upon system tray menu interaction
     """
+
+    # Stop all current processes
     for p in process_list:
         p.terminate()
     icon.stop()
-
 
 if __name__ == '__main__':
  
     # Open Configuration file
     with open('config.json') as json_data_file:
-        data = json.load(json_data_file)
-        print(data)
-    
+        mdata = json.load(json_data_file)
+        print(mdata)
+
+    # Create folder for the acquisition
+    path_name = os.path.join('~', 'Desktop', 'acqBIT', mdata['user'])   
+    path_to_save = os.path.expanduser(path_name)
+
+    if not os.path.exists(path_to_save):
+        os.makedirs(path_to_save)
+
     # Start acquisition
-    devices = data['devices']
+    devices = mdata['devices']
     process_list = []
     for d in devices.keys():
         # Start process
-        p = multiprocessing.Process(target=_process, args=(d, devices[d]))
+        p = multiprocessing.Process(target=_process, args=(path_to_save, d, devices[d]))
         p.start()
         process_list.append(p)
 
