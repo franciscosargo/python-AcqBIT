@@ -36,8 +36,6 @@ from PIL import Image
 # Local
 import int_out as io
 
-stop
-
 def _process(path_to_save, macAddress, setup):
     """
 		Main logic for the acquisition loop.
@@ -74,29 +72,27 @@ def _process(path_to_save, macAddress, setup):
 
         # Get initial time of acquisition
         i_time_acq = datetime.datetime.now()
-        i_time = i_time_acq 
-        
+        i_time = i_time_acq
+
         # Acquisition Loop
-        with int_out.open_h5file(path_to_save,  macAddress, acqChannels, acqLabels, nSamples) as f:
+        with io.open_h5file(path_to_save,  macAddress, acqChannels, acqLabels, nSamples) as f:
 
             # Acquisition iteration
             for i in xrange(0, 2*60*60):
                 try:
                     dataAcquired = device.read(nSamples) 
-                    int_out.write_h5file(f, macAddress, dataAcquired, acqChannels, i, nSamples)
+                    io.write_h5file(f, macAddress, dataAcquired, acqChannels, i, nSamples)
 
                     # Check for synchronization
-                    if datetime.datetime.now()- i_time >= sync_datetime and setup['master']:
+                    if datetime.datetime.now() - i_time >= sync_datetime and setup['master']:
 
                         digitalArray = [int(not bool(dg_val))
                                         for dg_val in digitalOutput]
                         device.trigger(digitalArray=digitalArray)
                         digitalOutput = digitalArray
 
-
                 except Exception as e:
-                    print e
-                    int_out.close_file(f, setup, i_time_acq, i)
+                    io.create_opensignals_mdata(f, setup, i_time_acq, i)
                     break
         
         device.close()

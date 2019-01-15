@@ -101,7 +101,7 @@ def open_h5file(path_to_save, macAddress, acqChannels, acqLabels, nSamples):
     return f
 
 
-def create_opensignals_mdata(setup, initialTimeAcquisition, i):
+def create_opensignals_mdata(f, setup, initialTimeAcquisition, i):
     """ 
     Utility function to close h5 file for the acquisition
     """
@@ -129,7 +129,11 @@ def create_opensignals_mdata(setup, initialTimeAcquisition, i):
              u'sync interval': setup['syncInterval'],
              u'time': i_time_acq.now().strftime("%H:%M:%S")}
 
-    return attrs
+    for k in attrs.keys():
+        # Set attributes of the root group
+        f[f.keys()[0]].attrs[k] = attrs[k]
+
+
 
 
 
