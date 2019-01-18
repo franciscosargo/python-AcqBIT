@@ -29,6 +29,7 @@ import os
 import numpy as np
 import h5py as h5
 
+
 def _write_acq_channel(r_grp, channelName, channelSignal, i, nSamples):
     """
     Write 1D signal from acquistion to h5 disk
@@ -80,13 +81,15 @@ def open_h5file(path_to_save, macAddress, acqChannels, acqLabels, nSamples):
 
     # Digital
     for dgNr in xrange(0, 4):
-        r_grp.create_dataset('digital/digital_{}'.format(dgNr + 1), 
+        d = dgNr + 1
+        r_grp.create_dataset('digital/digital_{}'.format(d), 
                              dtype='uint16', shape=(nSamples, 1), 
                              maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
 
     # Analog
     for chNr, chLabel in zip(acqChannels, acqLabels):
-        ch_dset = r_grp.create_dataset('raw/channel_{}'.format(chNr + 1),
+        c = chNr + 1
+        ch_dset = r_grp.create_dataset('raw/channel_{}'.format(c),
                               dtype='uint16', shape=(nSamples, 1), 
                               maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
         ch_dset.attrs['label'] = chLabel
@@ -98,6 +101,7 @@ def open_h5file(path_to_save, macAddress, acqChannels, acqLabels, nSamples):
                           shape=(nSamples, 1), 
                           maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
 
+
     return f
 
 
@@ -108,8 +112,9 @@ def create_opensignals_mdata(f, setup, initialTimeAcquisition, i):
 
     # Set attributes for the file
     i_time_acq = initialTimeAcquisition
-    nsamples = i*setup['nSamples']
+    nsamples = i*setup['nSamples']  ## This is the final number of samples in the acquisition
     duration = '{}s'.format(nsamples/setup['samplingRate'])
+    macAddress = setup['macAddress']
 
     attrs = {u'channels': setup['acqChannels'],
              u'comments': u'',
@@ -129,11 +134,43 @@ def create_opensignals_mdata(f, setup, initialTimeAcquisition, i):
              u'sync interval': setup['syncInterval'],
              u'time': i_time_acq.now().strftime("%H:%M:%S")}
 
+    ## Open signals backward compatibility **
+    root_group_name = macAddress + '/'
+    r_grp = f[root_group_name]
+    r_grp_events = r_grp.create_group('events/')
+    r_grp_events.create_dataset('digital', dtype='uint32',
+                          shape=(4, 4))
+    r_grp_events.create_dataset('sync', dtype='uint32',
+                          shape=(0, 32))
+    r_grp.create_group('plugin/action')
+    r_grp_events = r_grp.create_group('plugin/events/')
+    r_grp_events.create_dataset('events_definition', dtype='uint32',
+                                 shape=(0, 7))
+    r_grp_events.create_dataset('events_on', dtype='uint32',
+                                 shape=(0, 11))
+    r_grp.create_group('plugin/signalStatistics')
+
+    # Signal support datasets
+    for level in [10, 100, 1000]:
+        for name in ['Mx', 'mean', 'mean_x2', 'mx', 'sd', 't']:
+
+            for chNr in setup['acqChannels']: 
+                c = chNr + 1
+                r_grp.create_dataset('support/level_{}/channel_{}/{}'.format(level, c, name), 
+                                      dtype='uint16', shape=(nsamples/level, 1))
+
+            for dgNr in xrange(0, 4):
+                d = dgNr + 1
+                r_grp.create_dataset('support/level_{}/dig_channel_{}/{}'.format(level, d, name),
+                                      dtype='uint16', shape=(nsamples/level, 1))
+
     for k in attrs.keys():
         # Set attributes of the root group
         f[f.keys()[0]].attrs[k] = attrs[k]
 
-
+def write_sync_datetime(f, sync_datetime):
+    r_grp = f[f.keys()[0]]
+    r_grp['events/']
 
 
 

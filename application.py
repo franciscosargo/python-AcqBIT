@@ -79,23 +79,32 @@ def _process(path_to_save, macAddress, setup):
 
             # Acquisition iteration
             for i in xrange(0, 2*60*60):
+
                 try:
                     dataAcquired = device.read(nSamples) 
                     io.write_h5file(f, macAddress, dataAcquired, acqChannels, i, nSamples)
 
                     # Check for synchronization
-                    if datetime.datetime.now() - i_time >= sync_datetime and setup['master']:
-
+                    time_now = datetime.datetime.now()
+                    
+                    if  time_now - i_time >= sync_datetime and setup['master']:
+                        
                         digitalArray = [int(not bool(dg_val))
                                         for dg_val in digitalOutput]
                         device.trigger(digitalArray=digitalArray)
                         digitalOutput = digitalArray
 
+                        ## Save sync_time on hdf file
+                        #io.write_sync_datetime(f, sync_datetime)
+
+
                 except Exception as e:
                     io.create_opensignals_mdata(f, setup, i_time_acq, i)
+                    print e
                     break
         
         device.close()
+        
 
 def start_process(macAddress, setup):
     """ 
