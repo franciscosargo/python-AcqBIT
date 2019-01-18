@@ -23,7 +23,7 @@
 # Native
 import datetime
 import os
-import multiprocessing 
+import multiprocessing as mp
 import json
 
 # Third Party
@@ -36,7 +36,7 @@ from PIL import Image
 # Local
 import int_out as io
 
-def _process(path_to_save, macAddress, setup):
+def _process(path_to_save, macAddress, setup, general_event, specific_event):
     """
 		Main logic for the acquisition loop.
 	"""
@@ -86,6 +86,10 @@ def _process(path_to_save, macAddress, setup):
 
                     # Check for synchronization
                     time_now = datetime.datetime.now()
+
+                    ## Check for event interuption
+                    if (specific_event.is_set() or general_event.is_set()):
+                        raise ValueError('The device {} is closing.'.format(macAddress))
                     
                     if  time_now - i_time >= sync_datetime and setup['master']:
                         
@@ -103,29 +107,31 @@ def _process(path_to_save, macAddress, setup):
                     print e
                     break
         
-        device.close()
+        device.close()  ## close device
         
+        
+        if (specific_event.is_set() or general_event.is_set()): ## Stop acquisition
+            break
+        
+state = True
 
-def start_process(macAddress, setup):
+def stop_specific(macAddress):
     """ 
-    Utility function to start acquisition from each device in a single process
+    Stops the acquisition for the device specificed by the macAddress
     """
 
-    # Start process
-    p = multiprocessing.Process(target=_process, args=(macAddress, setup))
-    p.start()
+    specific_event_list[macAddress_list.index(macAddress)].set()  # set specific stoping event
+    global state
+    state = not item.checked
 
-    return p
 
 def stop():
     """ 
     Stops entire acquisition upon system tray menu interaction
     """
-
-    # Stop all current processes
-    for p in process_list:
-        p.terminate()
-    icon.stop()
+     
+    general_event.set()  # set stoping event
+    icon.stop()  # kill icon
 
 if __name__ == '__main__':
  
@@ -141,26 +147,34 @@ if __name__ == '__main__':
     if not os.path.exists(path_to_save):
         os.makedirs(path_to_save)
 
+    # Open General event for acquisition
+    general_event = mp.Event()
+
     # Start acquisition
     devices = mdata['devices']
+    specific_event_list = []
     process_list = []
-    for d in devices.keys():
+    macAddress_list = devices.keys()
+    for macAddr in macAddress_list:
         # Start process
-        p = multiprocessing.Process(target=_process, args=(path_to_save, d, devices[d]))
+        specific_event = mp.Event()
+        p = mp.Process(target=_process, args=(path_to_save, macAddr, devices[macAddr], 
+                                              specific_event, general_event))
         p.start()
+        specific_event_list.append(specific_event)
         process_list.append(p)
 
     # Create Icon
     image = Image.open("BITALINO-logo.png")
     icon = pystray.Icon("name", image)
-    icon_menu = [item(d, lambda func: process_list[i].terminate())
-                 for i, d in enumerate(devices.keys())]
+    icon_menu = [item('{}'.format(macAddr), lambda func: stop_specific(macAddr),
+                      checked=lambda item: state)
+                 for i, macAddr in enumerate(macAddress_list)]
     icon_menu = icon_menu + [item("Stop Acquisition", stop)]
     icon.menu = icon_menu
 
     icon.run()
     icon.stop()
-    
 
     
 
