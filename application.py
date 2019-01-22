@@ -36,6 +36,31 @@ from PIL import Image
 # Local
 import int_out as io
 
+
+def __find_bitalino(macAddress, general_event, specific_event):
+        """
+		Loop to find and connect to the bitalino device by macAddress.
+	    """
+        
+        ## Connection Loop
+        while True:
+                    
+            try:
+                device = bt.BITalino(macAddress)  # connect to BITalino
+                print device.version()
+
+                ## Check for event interruption
+                if (specific_event.is_set() or general_event.is_set()):
+                    raise ValueError('The device {} is closing.'.format(macAddress))
+                
+                break
+            except Exception as e:
+                print e
+                pass
+
+        return device
+
+
 def _process(path_to_save, macAddress, setup, general_event, specific_event):
     """
 		Main logic for the acquisition loop.
@@ -56,15 +81,8 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
     nChannels = len(digitalOutput) + len(acqChannels)
 
     while True:
-        ## Connection Loop
-        while True:
-            try:
-                device = bt.BITalino(macAddress)  # connect to BITalino
-                print device.version()
-                break
-            except Exception as e:
-                print e
-                pass
+
+        device = __find_bitalino(macAddress, general_event, specific_event)
                 
         # Start Acquisition
         device.start(samplingRate, acqChannels)
@@ -82,7 +100,7 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
 
                 try:
                     dataAcquired = device.read(nSamples) 
-                    io.write_h5file(f, macAddress, dataAcquired, acqChannels, i, nSamples)
+                    io.write_h5file(f, macAddress, dataAcquired, acqChannels, nSamples)
 
                     # Check for synchronization
                     time_now = datetime.datetime.now()
@@ -108,21 +126,18 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
                     break
         
         device.close()  ## close device
-        
-        
-        if (specific_event.is_set() or general_event.is_set()): ## Stop acquisition
-            break
-        
-state = True
 
-def stop_specific(macAddress):
+        ## Check for event interuption
+        if (specific_event.is_set() or general_event.is_set()):
+            break       
+
+def stop_specific():
     """ 
     Stops the acquisition for the device specificed by the macAddress
     """
-
-    specific_event_list[macAddress_list.index(macAddress)].set()  # set specific stoping event
-    global state
-    state = not item.checked
+    print item.__name__
+    #specific_event_list[macAddress_list.index(macAddress)].set()  # set specific stoping event
+    #state_list[macAddress_list.index(macAddress)] = not item.checked
 
 
 def stop():
@@ -154,6 +169,7 @@ if __name__ == '__main__':
     devices = mdata['devices']
     specific_event_list = []
     process_list = []
+    state_list = []
     macAddress_list = devices.keys()
     for macAddr in macAddress_list:
         # Start process
@@ -163,13 +179,15 @@ if __name__ == '__main__':
         p.start()
         specific_event_list.append(specific_event)
         process_list.append(p)
+        state_list.append(True)
 
     # Create Icon
     image = Image.open("BITALINO-logo.png")
     icon = pystray.Icon("name", image)
-    icon_menu = [item('{}'.format(macAddr), lambda func: stop_specific(macAddr),
+    icon_menu = [item('{}'.format(macAddr), stop_specific,
                       checked=lambda item: state)
-                 for i, macAddr in enumerate(macAddress_list)]
+                 for macAddr, state in zip(macAddress_list, state_list)]
+
     icon_menu = icon_menu + [item("Stop Acquisition", stop)]
     icon.menu = icon_menu
 

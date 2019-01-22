@@ -30,18 +30,18 @@ import numpy as np
 import h5py as h5
 
 
-def _write_acq_channel(r_grp, channelName, channelSignal, i, nSamples):
+def _write_acq_channel(r_grp, channelName, channelSignal, nSamples):
     """
-    Write 1D signal from acquistion to h5 disk
+    Write 1D signal from acquistion to the end of h5 dataset
     """
 
     # Write acquisition channel to h5 dset
     dset = r_grp[channelName]
-    dset.resize(((i+1)*nSamples, 1))
-    dset[i*nSamples:(i+1)*nSamples] = np.resize(channelSignal, (channelSignal.shape[0], 1))
+    dset.resize((dset.shape[0] + nSamples, 0))
+    dset[:-1000, :] = np.resize(channelSignal, (channelSignal.shape[0], 1))
 
 
-def write_h5file(file_object, macAddress, dataAcquired, acqChannels, i, nSamples):
+def write_h5file(file_object, macAddress, dataAcquired, acqChannels, nSamples):
     """ 
     Utility function to open and write to a previously opened h5 file for the acquisition
     """
@@ -50,17 +50,15 @@ def write_h5file(file_object, macAddress, dataAcquired, acqChannels, i, nSamples
     root_group_name = macAddress + '/'
     r_grp = file_object[root_group_name]
 
-    # Digital
-    for dgNr in xrange(0, 4):
-        _write_acq_channel(r_grp, 'digital/digital_{}'.format(dgNr + 1),
-                          dataAcquired[:, 1], i, nSamples)
+    # Set names of the datasets, order according to the data array
+    nseq_dset_names = ['raw/nseq']
+    digital_dset_names = ['digital/digital_{}'.format(dgNr + 1) for dgNr in xrange(0, 4)]
+    analog_dset_names = ['raw/channel_{}'.format(chNr + 1)  for chNr in acqChannels]
+    dset_names = nseq_dset_names + digital_dset_names + analog_dset_names
 
-    # Analog
-    for chNr in acqChannels:
-        _write_acq_channel(r_grp, 'raw/channel_{}'.format(chNr + 1),
-                          dataAcquired[:, chNr + 5], i, nSamples)
-        
-    _write_acq_channel(r_grp, 'raw/nSeq', dataAcquired[:, 0], i, nSamples)
+    # Set the datasets on the file
+    for i, dset_name in enumerate(dset_names):
+        _write_acq_channel(r_grp, dset_name, dataAcquired[:, i], nSamples)
 
 
 def open_h5file(path_to_save, macAddress, acqChannels, acqLabels, nSamples):
@@ -69,7 +67,7 @@ def open_h5file(path_to_save, macAddress, acqChannels, acqLabels, nSamples):
     """
 
     # Open file
-    filename = datetime.datetime.now().strftime("test_%Y-%m-%d_%H-%M-%S") + '.h5'
+    filename = datetime.datetime.now().strftime("{}_%Y-%m-%d_%H-%M-%S".format(macAddress.replace(':', ''))) + '.h5'
     file_path = os.path.join(path_to_save, filename)
 
     # Copy file 
@@ -79,28 +77,17 @@ def open_h5file(path_to_save, macAddress, acqChannels, acqLabels, nSamples):
     root_group_name = macAddress + '/'
     r_grp = f.create_group(root_group_name)
 
-    # Digital
-    for dgNr in xrange(0, 4):
-        d = dgNr + 1
-        r_grp.create_dataset('digital/digital_{}'.format(d), 
-                             dtype='uint16', shape=(nSamples, 1), 
-                             maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
+    # Set names of the datasets, order according to the data array
+    nseq_dset_names = ['raw/nseq']
+    digital_dset_names = ['digital/digital_{}'.format(dgNr + 1) for dgNr in xrange(0, 4)]
+    analog_dset_names = ['raw/channel_{}'.format(chNr + 1)  for chNr in acqChannels]
+    dset_names = nseq_dset_names + digital_dset_names + analog_dset_names
 
-    # Analog
-    for chNr, chLabel in zip(acqChannels, acqLabels):
-        c = chNr + 1
-        ch_dset = r_grp.create_dataset('raw/channel_{}'.format(c),
-                              dtype='uint16', shape=(nSamples, 1), 
-                              maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-        ch_dset.attrs['label'] = chLabel
-        ch_dset.attrs['sensor'] = 'RAW'
-        ch_dset.attrs['special'] = '{}'
-
-    # Sequence Number
-    r_grp.create_dataset('raw/nSeq', dtype='uint16', 
-                          shape=(nSamples, 1), 
-                          maxshape=(2*60*60*nSamples, 1), chunks=(1024, 1))
-
+    # Set the datasets on the file
+    for dset_name in dset_names:
+        r_grp.create_dataset(dset_name, 
+                             dtype='uint16', shape=(0, 1), 
+                             maxshape=(None, 1), chunks=(1024, 1))
 
     return f
 
