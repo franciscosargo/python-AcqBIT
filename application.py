@@ -131,24 +131,32 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
         if (specific_event.is_set() or general_event.is_set()):
             break       
 
-def stop_specific():
-    """ 
-    Stops the acquisition for the device specificed by the macAddress
-    """
-    print item.__name__
-    #specific_event_list[macAddress_list.index(macAddress)].set()  # set specific stoping event
-    #state_list[macAddress_list.index(macAddress)] = not item.checked
+
+# Icon methods
+def set_state(v):
+    def inner(icon, item):
+        global state_list, specific_event_list
+        state_list[v] = not state_list[v]
+        specific_event_list[v].set()
+    return inner
+    
+
+def get_state(v):
+    def inner(item):
+        global state_list
+        return state_list[v]
+    return inner
 
 
 def stop():
-    """ 
-    Stops entire acquisition upon system tray menu interaction
-    """
-     
     general_event.set()  # set stoping event
     icon.stop()  # kill icon
 
+
 if __name__ == '__main__':
+
+    global state_list
+    global specific_event_list
  
     # Open Configuration file
     with open('config.json') as json_data_file:
@@ -179,15 +187,13 @@ if __name__ == '__main__':
         p.start()
         specific_event_list.append(specific_event)
         process_list.append(p)
-        state_list.append(True)
+        state_list.append(1)
 
     # Create Icon
     image = Image.open("BITALINO-logo.png")
     icon = pystray.Icon("name", image)
-    icon_menu = [item('{}'.format(macAddr), stop_specific,
-                      checked=lambda item: state)
-                 for macAddr, state in zip(macAddress_list, state_list)]
-
+    icon_menu = [item('{}'.format(macAddr), set_state(i), checked=get_state(i))
+                 for i, macAddr in enumerate(macAddress_list)]
     icon_menu = icon_menu + [item("Stop Acquisition", stop)]
     icon.menu = icon_menu
 
