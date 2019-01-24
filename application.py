@@ -46,19 +46,67 @@ def __find_bitalino(macAddress, general_event, specific_event):
         while True:
                     
             try:
-                device = bt.BITalino(macAddress)  # connect to BITalino
-                print device.version()
-
                 ## Check for event interruption
                 if (specific_event.is_set() or general_event.is_set()):
                     raise ValueError('The device {} is closing.'.format(macAddress))
-                
+
+                device = bt.BITalino(macAddress, timeout=100)  # connect to BITalino
+                print device.version()
+
                 break
-            except Exception as e:
+
+            except ValueError as e:
                 print e
+                return None
+            
+            except Exception as e:
+                print '{} -- {}'.format(e, macAddress)
                 pass
 
         return device
+
+
+def __read_bitalino(device, path_to_save, macAddress, setup,
+                    acqChannels, acqLabels, digitalOutput, 
+                    nSamples, master_flag,
+                    sync_datetime, i_datetime, 
+                    specific_event, general_event):
+        """
+		Loop to continuously read the channels from a connected bitalino device according to input configuration.
+	    """
+
+        # Acquisition Loop
+        with io.open_h5file(path_to_save,  macAddress, acqChannels, acqLabels, nSamples) as f:
+
+            # Acquisition iteration
+            for i in xrange(0, 2*60*60):
+
+                try:
+                    dataAcquired = device.read(nSamples) 
+                    io.write_h5file(f, macAddress, dataAcquired, acqChannels, nSamples)
+
+                    # Check for synchronization
+                    datetime_now = datetime.datetime.now()
+
+                    ## Check for event interuption
+                    if (specific_event.is_set() or general_event.is_set()):
+                        raise ValueError('The device {} is closing.'.format(macAddress))
+                    
+                    if  datetime_now - i_datetime >= sync_datetime and setup['master']:
+                        
+                        # Change digital output in master device
+                        digitalArray = [int(not bool(dg_val))
+                                        for dg_val in digitalOutput]
+                        device.trigger(digitalArray=digitalArray)
+                        digitalOutput = digitalArray
+
+                        ## Save sync_time on hdf file (TO DO: should it be time_now?)
+                        io.write_sync_datetime(f, datetime_now)
+
+                except Exception as e:
+                    io.create_opensignals_mdata(f, setup, i_datetime, i)
+                    print '{} -- {}'.format(e, macAddress)
+                    break
 
 
 def _process(path_to_save, macAddress, setup, general_event, specific_event):
@@ -76,6 +124,7 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
     syncInterval = setup['syncInterval']  # minutes
     deviceName = setup['deviceName']
     resolution = setup['resolution']
+    master_flag = setup['master']
 
     sync_datetime = datetime.timedelta(minutes=syncInterval)
     nChannels = len(digitalOutput) + len(acqChannels)
@@ -83,53 +132,32 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
     while True:
 
         device = __find_bitalino(macAddress, general_event, specific_event)
+
+        ## Check for event interuption
+        if (specific_event.is_set() or general_event.is_set()):
+            break   
                 
         # Start Acquisition
         device.start(samplingRate, acqChannels)
         device.socket.settimeout(5)
 
         # Get initial time of acquisition
-        i_time_acq = datetime.datetime.now()
-        i_time = i_time_acq
+        i_datetime_acq = datetime.datetime.now()
+        i_datetime = i_datetime_acq
 
-        # Acquisition Loop
-        with io.open_h5file(path_to_save,  macAddress, acqChannels, acqLabels, nSamples) as f:
+        # Read from device
+        __read_bitalino(device, path_to_save, macAddress, setup,
+                        acqChannels, acqLabels, digitalOutput, 
+                        nSamples, master_flag,
+                        sync_datetime, i_datetime, 
+                        specific_event, general_event)
 
-            # Acquisition iteration
-            for i in xrange(0, 2*60*60):
-
-                try:
-                    dataAcquired = device.read(nSamples) 
-                    io.write_h5file(f, macAddress, dataAcquired, acqChannels, nSamples)
-
-                    # Check for synchronization
-                    time_now = datetime.datetime.now()
-
-                    ## Check for event interuption
-                    if (specific_event.is_set() or general_event.is_set()):
-                        raise ValueError('The device {} is closing.'.format(macAddress))
-                    
-                    if  time_now - i_time >= sync_datetime and setup['master']:
-                        
-                        digitalArray = [int(not bool(dg_val))
-                                        for dg_val in digitalOutput]
-                        device.trigger(digitalArray=digitalArray)
-                        digitalOutput = digitalArray
-
-                        ## Save sync_time on hdf file
-                        #io.write_sync_datetime(f, sync_datetime)
-
-
-                except Exception as e:
-                    io.create_opensignals_mdata(f, setup, i_time_acq, i)
-                    print e
-                    break
-        
         device.close()  ## close device
 
         ## Check for event interuption
         if (specific_event.is_set() or general_event.is_set()):
-            break       
+            break  
+            
 
 
 # Icon methods
@@ -157,6 +185,8 @@ if __name__ == '__main__':
 
     global state_list
     global specific_event_list
+
+    mp.freeze_support()
  
     # Open Configuration file
     with open('config.json') as json_data_file:

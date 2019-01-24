@@ -89,6 +89,15 @@ def open_h5file(path_to_save, macAddress, acqChannels, acqLabels, nSamples):
                              dtype='uint16', shape=(0, 1), 
                              maxshape=(None, 1), chunks=(1024, 1))
 
+    # Set event datasets on file
+    root_group_name = macAddress + '/'
+    r_grp = f[root_group_name]
+    r_grp_events = r_grp.create_group('events/')
+    r_grp_events.create_dataset('digital', dtype='uint32',
+                          shape=(4, 4))
+    r_grp_events.create_dataset('sync', dtype='uint32',
+                          maxshape=(None, 6), chunks=(1024, 1), shape=(0, 6))
+
     return f
 
 
@@ -124,11 +133,6 @@ def create_opensignals_mdata(f, setup, initialTimeAcquisition, i):
     ## Open signals backward compatibility **
     root_group_name = macAddress + '/'
     r_grp = f[root_group_name]
-    r_grp_events = r_grp.create_group('events/')
-    r_grp_events.create_dataset('digital', dtype='uint32',
-                          shape=(4, 4))
-    r_grp_events.create_dataset('sync', dtype='uint32',
-                          shape=(0, 32))
     r_grp.create_group('plugin/action')
     r_grp_events = r_grp.create_group('plugin/events/')
     r_grp_events.create_dataset('events_definition', dtype='uint32',
@@ -155,9 +159,20 @@ def create_opensignals_mdata(f, setup, initialTimeAcquisition, i):
         # Set attributes of the root group
         f[f.keys()[0]].attrs[k] = attrs[k]
 
-def write_sync_datetime(f, sync_datetime):
+
+def write_sync_datetime(f, datetime_now):
+    """ 
+    Utility function to append the datetime of the new device synchronization 
+    event to the appropriate dataset in the acquisition file.
+    """ 
+
+    my_dt_ob = datetime_now
+    # Convert datetime to list
+    date_list = [my_dt_ob.year, my_dt_ob.month, my_dt_ob.day, my_dt_ob.hour, my_dt_ob.minute, my_dt_ob.second]
     r_grp = f[f.keys()[0]]
-    r_grp['events/']
+    dset = r_grp['events/sync']
+    dset.resize((dset.shape[0] + 1, 6))
+    dset[-1, 0:len(date_list)] = date_list
 
 
 
