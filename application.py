@@ -19,6 +19,10 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
 """
+# encoding=utf8
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 # Native
 import datetime
@@ -31,13 +35,13 @@ import numpy as np
 import bitalino as bt
 import pystray
 from pystray import MenuItem as item
-from PIL import Image
 
 # Local
 import int_out as io
+from PIL import Image
 
 
-def __find_bitalino(macAddress, general_event, specific_event):
+def __find_bitalino(macAddress, deviceName, general_event, specific_event):
         """
 		Loop to find and connect to the bitalino device by macAddress.
 	    """
@@ -48,25 +52,25 @@ def __find_bitalino(macAddress, general_event, specific_event):
             try:
                 ## Check for event interruption
                 if (specific_event.is_set() or general_event.is_set()):
-                    raise ValueError('The device {} is closing.'.format(macAddress))
+                    raise ValueError('Closing the acquisition.')
 
                 device = bt.BITalino(macAddress, timeout=100)  # connect to BITalino
-                print device.version()
+                print 'Running! -- NAME: {} -- ADDR: {}'.format(deviceName, macAddress)
 
                 break
 
             except ValueError as e:
-                print e
+                print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
                 return None
             
             except Exception as e:
-                print '{} -- {}'.format(e, macAddress)
+                print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
                 pass
 
         return device
 
 
-def __read_bitalino(device, path_to_save, macAddress, setup,
+def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                     acqChannels, acqLabels, digitalOutput, 
                     nSamples, master_flag,
                     sync_datetime, i_datetime, 
@@ -90,7 +94,7 @@ def __read_bitalino(device, path_to_save, macAddress, setup,
 
                     ## Check for event interuption
                     if (specific_event.is_set() or general_event.is_set()):
-                        raise ValueError('The device {} is closing.'.format(macAddress))
+                        raise ValueError('Closing the acquisition.')
                     
                     if  datetime_now - i_datetime >= sync_datetime and setup['master']:
                         
@@ -105,7 +109,7 @@ def __read_bitalino(device, path_to_save, macAddress, setup,
 
                 except Exception as e:
                     io.create_opensignals_mdata(f, setup, i_datetime, i)
-                    print '{} -- {}'.format(e, macAddress)
+                    print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
                     break
 
 
@@ -129,11 +133,16 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
     sync_datetime = datetime.timedelta(minutes=syncInterval)
     nChannels = len(digitalOutput) + len(acqChannels)
 
+    ## Add folder for macAddress
+    path_to_save = os.path.join(path_to_save, deviceName)
+    if not os.path.exists(path_to_save):
+        os.makedirs(path_to_save)
+
     while True:
 
-        device = __find_bitalino(macAddress, general_event, specific_event)
+        device = __find_bitalino(macAddress, deviceName, general_event, specific_event)
 
-        ## Check for event interuption
+        ## Check for event interruption
         if (specific_event.is_set() or general_event.is_set()):
             break   
                 
@@ -146,8 +155,8 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
         i_datetime = i_datetime_acq
 
         # Read from device
-        __read_bitalino(device, path_to_save, macAddress, setup,
-                        acqChannels, acqLabels, digitalOutput, 
+        __read_bitalino(device, path_to_save, macAddress, deviceName,
+                        setup, acqChannels, acqLabels, digitalOutput, 
                         nSamples, master_flag,
                         sync_datetime, i_datetime, 
                         specific_event, general_event)
@@ -158,7 +167,6 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
         if (specific_event.is_set() or general_event.is_set()):
             break  
             
-
 
 # Icon methods
 def set_state(v):
@@ -181,12 +189,13 @@ def stop():
     icon.stop()  # kill icon
 
 
-if __name__ == '__main__':
+def main():
 
     global state_list
     global specific_event_list
-
-    mp.freeze_support()
+    global general_event
+    global specific_event
+    global icon
  
     # Open Configuration file
     with open('config.json') as json_data_file:
@@ -220,7 +229,7 @@ if __name__ == '__main__':
         state_list.append(1)
 
     # Create Icon
-    image = Image.open("BITALINO-logo.png")
+    image = Image.open("bitalino_logo_8rB_icon.ico")
     icon = pystray.Icon("name", image)
     icon_menu = [item('{}'.format(macAddr), set_state(i), checked=get_state(i))
                  for i, macAddr in enumerate(macAddress_list)]
@@ -230,6 +239,9 @@ if __name__ == '__main__':
     icon.run()
     icon.stop()
 
+if __name__ == '__main__':    
+    mp.freeze_support()
+    main()
     
 
 
