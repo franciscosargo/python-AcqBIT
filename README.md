@@ -27,13 +27,31 @@ The acquisition is governed by the use of a configuration file in .json format. 
 - Pystray module installed
 - Pillow module installed
 
+## PIP Installation
+The simplest installation procedure from source is to use pip, the PyPA recommended tool for installing Python packages. 
+The required packages are summarized in the following list:
+```bash
+bitalino==1.2.1
+h5py==2.9.0
+numpy==1.16.0
+Pillow==5.4.1
+pystray==0.14.4
+```
+The packages can be duly installed by runnig:
+```bash
+pip install requirements.txt
+```
+## Bluetooth module Installation
+
+### Windows
 
 ## Main Application
+To run the main application, provided the configuration is correct, simply type:
 ```bash
 python application.py
 ```
 
-# Running Builds
+# Running from Builds
 
 
 
