@@ -54,10 +54,8 @@ sudo apt-get install libbluetooth-dev
 pip install pybluez
 ```
 
-### Mac Os
-
 ## 2. Core Packages Installation
-The simplest installation procedure from source is to use pip, the PyPA recommended tool for installing Python packages. 
+To continue the installation process, clone or download the present repository into your machine. The simplest installation procedure from source is to use pip, the PyPA recommended tool for installing Python packages. 
 The required packages are summarized in the following list:
 ```bash
 bitalino==1.2.1
@@ -67,8 +65,9 @@ Pillow==5.4.1
 pystray==0.14.4
 ```
 
-The packages can be duly installed by runnig:
+The packages can be duly installed via command line by runnig:
 ```bash
+cd PROJECTFOLDERPATH/python-AcqBIT
 pip install -r requirements.txt
 ```
 
@@ -77,9 +76,6 @@ To run the main application, provided the configuration is correct, simply type:
 ```bash
 python application.py
 ```
-
-# Running Builds
-
 
 # (Optional) File Synchronization via Seafile
 Synchronization of the files produced by the application can be done resorting to the seafile platform. 
