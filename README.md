@@ -11,7 +11,7 @@ The availabilty of open-source robust acquisition software for the BITalino boar
 This projects provides a simple and yet efficient solution: by using python's multiprocessing module to handle multiple long-term concurent acquisitions, this prototypical application allows for the user to easily setup a multimodal continuos bio-signal monitorization, run it in several background processes and promptly share the produced data via cloud synchronization.      
 
 # Configuration
-The acquisition is governed by the use of a configuration file in .json format. The strucuture presents two main fields: `"device"`, holding the metadata for the specifications of the device during acquisition, and `"user"`, for insertion of a suitable username under which to group the acquisition files. 
+The acquisition is governed by the use of a configuration file in .json format. The strucuture presents two main fields: `"device"`, holding the metadata for the specifications of device acquisition, and `"user"`, holding a suitable username under which to group the acquisition files. 
  
 ## Settings in `config.json`
 - `"device"`: MAC address or Virtual COM port (VCP) of your BITalino device
@@ -28,8 +28,8 @@ The acquisition is governed by the use of a configuration file in .json format. 
 - Pystray module installed
 - Pillow module installed
 
-## Bluetooth extension Installation
-In order to gain access to Python's Bluetooth capabilities, it is necessary to install specific packages that differ for each platform.
+## 1. Bluetooth Extension Installation
+In order to gain access to Python's Bluetooth capabilities, it is necessary to install specific extensions for each platform.
 
 ### Windows
 PyBluez serves as the best Bluetooth Python extension package for Windows. Since the package is not available in the repositories maintained by PyPA, the best current method of installation is to use the package provided by the Anaconda Cloud. This requires the creation of a new conda environment, after the installation of the Anaconda distribution, which can be found at: https://repo.continuum.io/archive/Anaconda2-2018.12-Windows-x86_64.exe).
@@ -39,9 +39,16 @@ Following the activation of an appropriate conda environment, the installation o
 conda install -c slobodan pybluez
 ```
 
+### GNU/Linux
+On Linux systems the procedure is simpler, only requiring the following `bash` commands:
+ ```bash
+sudo apt-get install libbluetooth-dev
+pip install pybluez
+```
+
 ### Mac Os
 
-## Core Packages Installation
+## 2. Core Packages Installation
 The simplest installation procedure from source is to use pip, the PyPA recommended tool for installing Python packages. 
 The required packages are summarized in the following list:
 ```bash
@@ -58,7 +65,7 @@ pip install -r requirements.txt
 ```
 
 
-## Main Application
+## 3. Deployment of Main Application
 To run the main application, provided the configuration is correct, simply type:
 ```bash
 python application.py
