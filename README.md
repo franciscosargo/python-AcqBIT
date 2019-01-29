@@ -14,10 +14,12 @@ This projects provides a simple and yet efficient solution: by using python's mu
 The acquisition is governed by the use of a configuration file in .json format. The strucuture presents two main fields: `"device"`, holding the metadata for the specifications of device acquisition, and `"user"`, holding a suitable username under which to group the acquisition files. 
  
 ## Settings in `config.json`
-- `"device"`: MAC address or Virtual COM port (VCP) of your BITalino device
-- `"channels"`: List of channels to be acquired from the device (e.g. [1, 6] acquires channels A1 and A6)
-- `"sampling_rate"`: Sampling rate at which data should be acquired (i.e. 1000, 100, 10 or 1 Hz)
-- `"labels"`: Human-readable descriptor associated with each channel acquired by the device, and that will be used to name the properties on the JSON-formatted structure created for streaming (**NOTE:** BITalino always sends a sequence number, two digital inputs and two digital outputs, hence the 5 first entries in the `"labels"` array)
+Each entry within the `"device"` field is a .json substructure, with key equal to the MAC address or Virtual COM port (VCP) of your BITalino device.
+
+The respective substructure requires the completion of the following subfields:
+- `"acqChannels"`: List of channels to be acquired from the device (e.g. [1, 6] acquires channels A1 and A6)
+- `"samplingRate"`: Sampling rate at which data should be acquired (i.e. 1000, 100, 10 or 1 Hz)
+- `"acqLabels"`: Human-readable descriptor associated with each channel acquired by the device, and that will be used to name the properties on the JSON-formatted structure created for streaming (**NOTE:** BITalino always sends a sequence number, two digital inputs and two digital outputs, hence the 5 first entries in the `"labels"` array)
 
 # Running from Sources
 
@@ -64,7 +66,6 @@ The packages can be duly installed by runnig:
 pip install -r requirements.txt
 ```
 
-
 ## 3. Deployment of Main Application
 To run the main application, provided the configuration is correct, simply type:
 ```bash
@@ -73,6 +74,38 @@ python application.py
 
 # Running Builds
 
+
+# (Optional) File Synchronization via Seafile
+Synchronization of the files produced by the application can be done resorting to the seafile platform. 
+It is intedend to synchronized the local acqBIT folder with the remote present the server 
+
+## 1. Download Seafile Desktop Syncing Client
+The Seafile Desktop Syncing Client is a client side application that allows the user to synchronize any local folder to a remote server. 
+The installation method varies across different platforms. 
+
+### Windows
+https://download.seadrive.org/seafile-6.2.11-en.msi
+
+### Linux
+https://help.seafile.com/en/syncing_client/install_linux_client.html
+
+### Mac OS
+https://download.seadrive.org/seafile-client-6.2.11.dmg
+
+
+## 2. Login with Credentials
+After download and installation of the client, launch the program and click `Add an account`. Then fill in the following fields:
+
+```server: http://193.136.222.123:8000
+   Email/Username: (your email/username)
+   Password: (your password)
+   Computer Name: (your computer name)
+``` 
+   
+## 3. Sync acqBIT Folder
+After Login, look for the acqBIT library under `My Libraries`. If present, simply right click on the folder and sync it with the local acqBIT folder created by the run of the acquistion application.
+
+If there is no acqBIT library simply drag and drop the local acqBIT folder in the bottommost field dubbed `Drop Folder to Sync`.
 
 
 
