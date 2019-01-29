@@ -99,7 +99,7 @@ def main():
         state_list.append(1)
 
     # Create Icon
-    image = Image.open("bitalino_logo_8rB_icon.ico")
+    image = Image.open("BITALINO-logo.png")
     icon = pystray.Icon("name", image)
     icon_menu = [item('{}'.format(macAddr), set_state(i), checked=get_state(i))
                  for i, macAddr in enumerate(macAddress_list)]
