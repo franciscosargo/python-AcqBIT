@@ -16,6 +16,7 @@ def __find_bitalino(macAddress, deviceName, general_event, specific_event):
 	    """
         
         ## Connection Loop
+        print 'Looking for bitalino... -- NAME: {} -- ADDR: {}'.format(deviceName, macAddress)
         while True:
                     
             try:
@@ -23,7 +24,7 @@ def __find_bitalino(macAddress, deviceName, general_event, specific_event):
                 if (specific_event.is_set() or general_event.is_set()):
                     raise ValueError('Closing the acquisition.')
 
-                device = bt.BITalino(macAddress, timeout=100)  # connect to BITalino
+                device = bt.BITalino(macAddress, timeout=5)  # connect to BITalino
                 print 'Running! -- NAME: {} -- ADDR: {}'.format(deviceName, macAddress)
 
                 break
@@ -33,7 +34,7 @@ def __find_bitalino(macAddress, deviceName, general_event, specific_event):
                 return None
             
             except Exception as e:
-                print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
+                #print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
                 pass
 
         return device
@@ -68,9 +69,9 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                     
                     if setup['master']:
                         if  datetime_now - b_datetime >= sync_datetime:
-                            
+                            print 'Syncing from master -- NAME: {} -- ADDR: {}'.format(deviceName, macAddress)
                             # Change digital output in master device
-                            digitalOutput = [dataAcquired[-1, 1], dataAcquired[-1, 2]]
+                            digitalOutput = [dataAcquired[-1, 3], dataAcquired[-1, 4]]
                             digitalArray = [int(not bool(dg_val))
                                             for dg_val in digitalOutput]
                             device.trigger(digitalArray=digitalArray)

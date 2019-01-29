@@ -34,11 +34,11 @@ def _write_acq_channel(r_grp, channelName, channelSignal, nSamples):
     """
     Write 1D signal from acquistion to the end of h5 dataset
     """
-
+    
     # Write acquisition channel to h5 dset
     dset = r_grp[channelName]
-    dset.resize((dset.shape[0] + nSamples, 0))
-    dset[:-1000, :] = np.resize(channelSignal, (channelSignal.shape[0], 1))
+    dset.resize((dset.shape[0] + nSamples, 1))
+    dset[-nSamples:, 0] = channelSignal
 
 
 def write_h5file(file_object, macAddress, dataAcquired, acqChannels, nSamples):
