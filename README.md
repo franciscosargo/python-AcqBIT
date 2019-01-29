@@ -110,9 +110,9 @@ After download and installation of the client, launch the program and click `Add
 ``` 
    
 ## 3. Sync acqBIT Folder
-After Login, look for the acqBIT library under `My Libraries`. If present, simply right click on the folder and sync it with the local acqBIT folder created by the run of the acquistion application.
+After Login, look for the acqBIT library under `My Libraries`. If present, simply right click on the library icon and sync it with the local acqBIT folder created by the acquistion application.
 
-If there is no acqBIT library simply drag and drop the local acqBIT folder in the bottommost field dubbed `Drop Folder to Sync`.
+If there is no acqBIT library, simply drag and drop the local acqBIT folder in the bottommost field dubbed `Drop Folder to Sync`.
 
 
 
