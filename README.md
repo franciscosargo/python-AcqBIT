@@ -17,9 +17,15 @@ The acquisition is governed by the use of a configuration file in .json format. 
 Each entry within the `"device"` field is a .json substructure, with key equal to the MAC address or Virtual COM port (VCP) of your BITalino device.
 
 The respective substructure requires the completion of the following subfields:
-- `"acqChannels"`: List of channels to be acquired from the device (e.g. [1, 6] acquires channels A1 and A6)
+- `"acqChannels"`: List of analog channels to be acquired from the device (e.g. [1, 6] acquires channels A1 and A6)
 - `"samplingRate"`: Sampling rate at which data should be acquired (i.e. 1000, 100, 10 or 1 Hz)
 - `"acqLabels"`: Human-readable descriptor associated with each channel acquired by the device, and that will be used to name the properties on the JSON-formatted structure created for streaming (**NOTE:** BITalino always sends a sequence number, two digital inputs and two digital outputs, hence the 5 first entries in the `"labels"` array)
+- `master`: Either `True` or `False`, being the flag denoting if the current device is master synchronizer or not.  (**NOTE:** Only one device should be master.)
+- `"syncInterval`: The interval in minutes between each module acquistion synchronization, with the triggering of the digital channels of the master device (**NOTE:** Only value in the master device is considered.).
+- `"resolution"`: Resolution for each of the acquisition channels as specified in the field `"acqLabels"`.
+- `"nSamples"`: Number of samples read from a running BITalino device within each iteration of the acquisition.
+- `"deviceName`: Human readable device name, useful for posterior indentification.
+- `"macAddress`: MAC address or Virtual COM port (VCP) of BITalino device.
 
 # Running from Sources
 
@@ -96,7 +102,8 @@ https://download.seadrive.org/seafile-client-6.2.11.dmg
 ## 2. Login with Credentials
 After download and installation of the client, launch the program and click `Add an account`. Then fill in the following fields:
 
-```server: http://193.136.222.123:8000
+```
+   server: http://193.136.222.123:8000
    Email/Username: (your email/username)
    Password: (your password)
    Computer Name: (your computer name)
