@@ -23,11 +23,25 @@ The acquisition is governed by the use of a configuration file in .json format. 
 
 ##  Dependencies 
 - Python 2.7 must be installed
+- Python Bluetooth extension package installed
 - BITalino API and dependencies installed
 - Pystray module installed
 - Pillow module installed
 
-## PIP Installation
+## Bluetooth extension Installation
+In order to gain access to Python's Bluetooth capabilities, it is necessary to install specific packages that differ for each platform.
+
+### Windows
+PyBluez serves as the best Bluetooth Python extension package for Windows. Since the package is not available in the repositories maintained by PyPA, the best current method of installation is to use the package provided by the Anaconda Cloud. This requires the creation of a new conda environment, after the installation of the Anaconda distribution, which can be found at: https://repo.continuum.io/archive/Anaconda2-2018.12-Windows-x86_64.exe).
+ 
+Following the activation of an appropriate conda environment, the installation of the package can proceed by typing in a shell:
+ ```bash
+conda install -c slobodan pybluez
+```
+
+### Mac Os
+
+## Core Packages Installation
 The simplest installation procedure from source is to use pip, the PyPA recommended tool for installing Python packages. 
 The required packages are summarized in the following list:
 ```bash
@@ -37,13 +51,12 @@ numpy==1.16.0
 Pillow==5.4.1
 pystray==0.14.4
 ```
+
 The packages can be duly installed by runnig:
 ```bash
-pip install requirements.txt
+pip install -r requirements.txt
 ```
-## Bluetooth module Installation
 
-### Windows
 
 ## Main Application
 To run the main application, provided the configuration is correct, simply type:
@@ -51,7 +64,7 @@ To run the main application, provided the configuration is correct, simply type:
 python application.py
 ```
 
-# Running from Builds
+# Running Builds
 
 
 
