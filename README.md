@@ -14,9 +14,9 @@ This projects provides a simple and yet efficient solution: by using python's mu
 The acquisition is governed by the use of a configuration file in .json format. The strucuture presents two main fields: `"device"`, holding the metadata for the specifications of device acquisition, and `"user"`, holding a suitable username under which to group the acquisition files. 
  
 ## Settings in `config.json`
-Each entry within the `"device"` field is a .json substructure, with key equal to the MAC address or Virtual COM port (VCP) of your BITalino device.
+Each entry within the `"device"` field is a .json substructure, with key equal to the MAC address or Virtual COM port (VCP) of your BITalino device. Each entry should thus be inserted in the form `WINDOWS/Linux - XX:XX:XX:XX:XX:XX | MAC - /dev/tty.BITalino-XX-XX-DevB`, depending on your platform.
 
-The respective substructure requires the completion of the following subfields:
+The respective substructure of the `"device"` holds the following subfields:
 - `"acqChannels"`: List of analog channels to be acquired from the device (e.g. [1, 6] acquires channels A1 and A6)
 - `"samplingRate"`: Sampling rate at which data should be acquired (i.e. 1000, 100, 10 or 1 Hz)
 - `"acqLabels"`: Human-readable descriptor associated with each channel acquired by the device, and that will be used to name the properties on the JSON-formatted structure created for streaming (**NOTE:** BITalino always sends a sequence number, two digital inputs and two digital outputs, hence the 5 first entries in the `"labels"` array)
@@ -28,10 +28,11 @@ The respective substructure requires the completion of the following subfields:
 - `"macAddress`: MAC address or Virtual COM port (VCP) of BITalino device.
 
 # Running from Sources
+In order to run the project from source, the installation of necessary dependencies is required. Hence, since some of the dependencies are Python packages, the procedure may alter your current Python environment adding new or reinstalling existing packages. The creation of a fresh environment, preferably already bundled with `pip`, is advisable. 
 
 ##  Dependencies 
 - Python 2.7 must be installed
-- Python Bluetooth extension package installed
+- Python Bluetooth extension package installed (not required by Mac OS)
 - BITalino API and dependencies installed
 - Pystray module installed
 - Pillow module installed
@@ -55,7 +56,7 @@ pip install pybluez
 ```
 
 ## 2. Core Packages Installation
-To continue the installation process, clone or download the present repository into your machine. The simplest installation procedure from source is to use pip, the PyPA recommended tool for installing Python packages. 
+To continue the installation process, clone or download the present repository into your machine. The simplest installation procedure from source is to use pip, the PyPA recommended tool for installing Python packages.
 The required packages are summarized in the following list:
 ```bash
 bitalino==1.2.1
