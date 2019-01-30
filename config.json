@@ -3,7 +3,7 @@
 
     "devices":{
 
-            "WINDOWS/Linux - XX:XX:XX:XX:XX:XX | MAC - /dev/tty.BITalino-XX-XX-DevB": {
+            "(WINDOWS/Linux) - XX:XX:XX:XX:XX:XX | (MAC OS) - /dev/tty.BITalino-XX-XX-DevB": {
             "samplingRate":1000,
             "nSamples":1000,
             "digitalOutput":[1, 1],
