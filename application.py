@@ -19,15 +19,20 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
 """
+from __future__ import print_function
+
+
 # encoding=utf8
 import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-# Native
+
+# Native            
 import os
 import multiprocessing as mp
 import json
+import datetime
 
 # Third Party
 import pystray
@@ -36,6 +41,11 @@ from PIL import Image
 
 # local
 from bitalino_process import _process
+
+# Native
+# Logging snippet
+import logging
+logger = logging.getLogger(__name__)
             
 
 # Icon methods
@@ -73,7 +83,9 @@ def main():
         print(mdata)
 
     # Create folder for the acquisition
-    path_name = os.path.join('~', 'Desktop', 'acqBIT', mdata['user'])   
+    activity_name = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+    print(activity_name)
+    path_name = os.path.join('~', 'Desktop', 'acqBIT', mdata['user'], activity_name)   
     path_to_save = os.path.expanduser(path_name)
 
     if not os.path.exists(path_to_save):
