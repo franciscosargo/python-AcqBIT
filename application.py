@@ -21,12 +21,10 @@
 """
 from __future__ import print_function
 
-
 # encoding=utf8
 import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
-
 
 # Native            
 import os
@@ -46,7 +44,7 @@ from bitalino_process import _process
 # Logging snippet
 import logging
 logger = logging.getLogger(__name__)
-            
+
 
 # Icon methods
 def set_state(v):

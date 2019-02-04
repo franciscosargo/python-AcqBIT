@@ -29,7 +29,6 @@ import os
 import numpy as np
 import h5py as h5
 
-
 def _write_acq_channel(r_grp, channelName, channelSignal, nSamples):
     """
     Write 1D signal from acquistion to the end of h5 dataset
