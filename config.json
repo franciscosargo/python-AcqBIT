@@ -2,20 +2,31 @@
     "user": "New USER",
 
     "devices":{
-
-            "(WINDOWS/Linux) - XX:XX:XX:XX:XX:XX | (MAC OS) - /dev/tty.BITalino-XX-XX-DevB": {
+        "20:16:07:18:16:69": {
             "samplingRate":1000,
             "nSamples":1000,
             "digitalOutput":[1, 1],
             "acqChannels": [0, 1, 2, 3, 4, 5],
             "acqLabels": ["A1", "A2", "A3", "A4", "A5", "A6"],
             "batteryThreshold": 30,
-            "syncInterval": 0.1,
+            "syncInterval": 10,
             "master":1,
             "resolution": [ 4,  1,  1,  1,  1, 10, 10, 10, 10,  6,  6],
-            "deviceName":"Chosen name for device",
-            "macAddress":"WINDOWS/Linux - XX:XX:XX:XX:XX:XX | MAC - /dev/tty.BITalino-XX-XX-DevB"
+            "deviceName":"HANDdevice",
+            "macAddress":"20:16:07:18:16:69",
+            "support": 1
+        },
+        "20:16:04:12:01:23": {
+            "samplingRate":1000,
+            "nSamples":1000,
+            "digitalOutput":[1, 1],
+            "acqChannels": [0, 1, 2, 3, 4, 5],
+            "acqLabels": ["A1", "A2", "A3", "A4", "A5", "A6"],
+            "batteryThreshold": 30,
+            "resolution": [ 4,  1,  1,  1,  1, 10, 10, 10, 10,  6,  6],
+            "deviceName":"ModuleA",
+            "macAddress":"20:16:04:12:01:23",
+            "support": 1
         }
-
     }
 }
