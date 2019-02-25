@@ -167,6 +167,7 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
             except Exception as e:
                 len_acq = len(ioos.get_analog_channel(r_group, 1))
                 dur_acq = np.true_divide(len_acq, samplingRate)
+                r_group.attrs['init_time'] = time_init_acq
                 if support:
                     ioos.write_t_support(r_group, acqChannels)
                 #ioos.close_file(r_group, setup, len_acq)
