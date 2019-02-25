@@ -14,7 +14,7 @@ base = None
 
 
 setup(name = "acqBIT",
-      version = "0.1",
+      version = "2.0",
       description = "Application for robust pervasive bio-signals acquisition with BITalino devices",
       options = {"build_exe": build_exe_options},
       executables = [Executable("application.py")])
