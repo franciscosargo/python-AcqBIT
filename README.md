@@ -1,3 +1,6 @@
+
+![alt text](https://raw.githubusercontent.com/franciscosargo/python-AcqBIT/master/add_ons/acqBIT.PNG)
+
 # Overview
 
 ## python-AcqBIT

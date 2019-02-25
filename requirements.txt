@@ -1,7 +1,6 @@
 bitalino==1.2.1
 h5py==2.9.0
-numpy==1.16.0
-Pillow==5.4.1
 pystray==0.14.4
+psutil==5.5.1
 
 
