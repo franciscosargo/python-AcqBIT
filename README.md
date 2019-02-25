@@ -1,5 +1,7 @@
 
-![alt text](https://raw.githubusercontent.com/franciscosargo/python-AcqBIT/master/add_ons/acqBIT.PNG)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/franciscosargo/python-AcqBIT/master/add_ons/acqBIT.PNG">
+</p>
 
 # Overview
 
