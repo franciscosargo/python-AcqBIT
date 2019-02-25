@@ -23,8 +23,8 @@ from __future__ import print_function
 
 # encoding=utf8
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+#reload(sys)
+#sys.setdefaultencoding('utf8')
 
 # Native            
 import os
@@ -44,10 +44,6 @@ from bitalino_process import _process
 # Logging snippet
 import logging
 logger = logging.getLogger(__name__)
-
-
-
-
 
 # Icon methods
 def set_state(v):
@@ -79,7 +75,7 @@ def main():
     global icon
  
     # Open Configuration file
-    with open('config.json') as json_data_file:
+    with open(os.path.join(os.getcwd(), '..', 'config.json')) as json_data_file:
         mdata = json.load(json_data_file)
         print(mdata)
 
@@ -112,7 +108,7 @@ def main():
         state_list.append(1)
 
     # Create Icon
-    image = Image.open("BITALINO-logo.png")
+    image = Image.open(os.path.join( os.getcwd(), '..', 'BITALINO-logo.png'))
     icon = pystray.Icon("name", image)
     icon_menu = [item('{}'.format(macAddr), set_state(i), checked=get_state(i))
                  for i, macAddr in enumerate(macAddress_list)]
@@ -124,12 +120,4 @@ def main():
 
 if __name__ == '__main__':    
     mp.freeze_support()
-    main()
-    
-
-
-
-
-
-
-    
+    main()    

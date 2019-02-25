@@ -174,48 +174,35 @@ def write_sync_datetime(f, datetime_now):
     dset[-1, 0:len(date_list)] = date_list
 
 
-def _write_support(r_group, level, channel_name, sp):
-    dset_name = 'support/level_{}/{}/Mx'.format(level, channel_name)
-    data = r_group[dset_name]
-    del r_group[dset_name]
-    r_group.create_dataset(dset_name, dtype='uint16', data=sp[:, 0].reshape(length, 1))
-    
-    dset_name = 'support/level_{}/{}/mx'.format(level, channel_name)
-    data = r_group[dset_name]
-    del r_group[dset_name]
-    r_group.create_dataset(dset_name, dtype='uint16', data=sp[:, 1].reshape(length, 1))
-    
-    dset_name = 'support/level_{}/{}/mean'.format(level, channel_name)
-    data = r_group[dset_name]
-    del r_group[dset_name]
-    r_group.create_dataset(dset_name, dtype='uint16', data=sp[:, 2].reshape(length, 1))
-    
-    dset_name = 'support/level_{}/{}/mean_x2'.format(level, channel_name)
-    data = r_group[dset_name]
-    del r_group[dset_name]
-    r_group.create_dataset(dset_name, dtype='uint16', data=sp[:, 3].reshape(length, 1))
-    
-    dset_name = 'support/level_{}/{}/sd'.format(level, channel_name)
-    data = r_group[dset_name]
-    del r_group[dset_name]
-    r_group.create_dataset(dset_name, dtype='uint16', data=sp[:, 4].reshape(length, 1))
-    
-    dset_name = 'support/level_{}/{}/t'.format(level, channel_name)
-    data = r_group[dset_name]
-    del r_group[dset_name]
-    t = 
-    r_group.create_dataset(dset_name, dtype='uint16', data=t.reshape(length, 1))    
+#def _write_support(r_group, level, channel_name, sp):
+    #dset_name = 'support/level_{}/{}/Mx'.format(level, channel_name)
+    #data = r_group[dset_name]
+    #del r_group[dset_name]
+    #r_group.create_dataset(dset_name, dtype='uint16', data=sp[:, 0].reshape(length, 1))
+#    
+    #dset_name = 'support/level_{}/{}/mx'.format(level, channel_name)
+    #data = r_group[dset_name]
+    #del r_group[dset_name]
+    #r_group.create_dataset(dset_name, dtype='uint16', data=sp[:, 1].reshape(length, 1))
+#    
+    #dset_name = 'support/level_{}/{}/mean'.format(level, channel_name)
+    #data = r_group[dset_name]
+    #del r_group[dset_name]
+    #r_group.create_dataset(dset_name, dtype='uint16', data=sp[:, 2].reshape(length, 1))
+#    
+    #dset_name = 'support/level_{}/{}/mean_x2'.format(level, channel_name)
+    #data = r_group[dset_name]
+    #del r_group[dset_name]
+    #r_group.create_dataset(dset_name, dtype='uint16', data=sp[:, 3].reshape(length, 1))
+#    
+    #dset_name = 'support/level_{}/{}/sd'.format(level, channel_name)
+    #data = r_group[dset_name]
+    #del r_group[dset_name]
+    #r_group.create_dataset(dset_name, dtype='uint16', data=sp[:, 4].reshape(length, 1))
+#    
+    #dset_name = 'support/level_{}/{}/t'.format(level, channel_name)
+    #data = r_group[dset_name]
+    #del r_group[dset_name]
+    #r_group.create_dataset(dset_name, dtype='uint16', data=t.reshape(length, 1))    
 
 
-def write_support(file_object, sp):
-    f = file_object
-    r_group = f[f.keys()]
-
-    digital_dset_names = ['digital/digital_{}'.format(dgNr + 1) for dgNr in xrange(0, 4)]
-    analog_dset_names = ['raw/channel_{}'.format(chNr + 1)  for chNr in acqChannels]
-
-    #  Change the data on disk
-
-    [_write_support(r_group, channel_name, level) 
-     for channel_name in digital_dset_names + analog_dset_names]   
-                                            

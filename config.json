@@ -2,31 +2,34 @@
     "user": "New USER",
 
     "devices":{
-        "20:16:07:18:16:69": {
+        "20:16:04:12:02:30": {
             "samplingRate":1000,
             "nSamples":1000,
             "digitalOutput":[1, 1],
             "acqChannels": [0, 1, 2, 3, 4, 5],
             "acqLabels": ["A1", "A2", "A3", "A4", "A5", "A6"],
             "batteryThreshold": 30,
-            "syncInterval": 10,
+            "syncInterval": 1,
             "master":1,
             "resolution": [ 4,  1,  1,  1,  1, 10, 10, 10, 10,  6,  6],
-            "deviceName":"HANDdevice",
-            "macAddress":"20:16:07:18:16:69",
+            "deviceName":"VR EDA",
+            "macAddress":"20:16:04:12:02:30",
             "support": 1
         },
-        "20:16:04:12:01:23": {
+
+        "20:16:04:12:01:40": {
             "samplingRate":1000,
             "nSamples":1000,
             "digitalOutput":[1, 1],
             "acqChannels": [0, 1, 2, 3, 4, 5],
             "acqLabels": ["A1", "A2", "A3", "A4", "A5", "A6"],
             "batteryThreshold": 30,
+            "syncInterval": 1,
+            "master":0,
             "resolution": [ 4,  1,  1,  1,  1, 10, 10, 10, 10,  6,  6],
-            "deviceName":"ModuleA",
-            "macAddress":"20:16:04:12:01:23",
-            "support": 1
+            "deviceName":"module B",
+            "macAddress":"20:16:04:12:02:30",
+            "support": 0
         }
     }
 }

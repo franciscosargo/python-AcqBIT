@@ -1,133 +1,180 @@
 # Python
-import timeit
+import time
 import datetime
 import os
+import sys
 import psutil
 
 # Third Party
-import numpy as np
 import bitalino as bt
+import numpy as np
 
 # Local
 import int_out as io
+import ioopensignals as ioos
 import support as sp
 
+import pdb
 
-def __sync_bitalino(device, f, setup,
-                    datetime_now,
-                    dataAcquired):
-    """
-    Function to trigger the digital pins of the master device, for synchronization purposes.
-    """
+# Determine timing configuration (Platform dependent)
+if sys.platform == 'win32':
+    epoch_time = time.time
+    timing = time.clock
+
+if sys.platform == 'darwin' or sys.platform == 'linux2':
+    epoch_time = time.time
+    timing = time.time
+
+
+def __sync_bitalino(device,
+                    ndsignal):
+    """Function to trigger the digital pins of the master device, negating current state,
+       a mark which serves synchronization purposes."""
 
     # Change digital output in master device
-    digitalOutput = [dataAcquired[-1, 3], dataAcquired[-1, 4]]
     digitalArray = [int(not bool(dg_val))
-                    for dg_val in digitalOutput]
+                    for dg_val in list(ndsignal[-1, 3:5])]
+    digitalOutput = np.array(list(ndsignal[-1, 1:3]) + digitalArray, copy=False)
     device.trigger(digitalArray=digitalArray)
-    digitalOutput = digitalArray
-
-    ## Save sync_time on hdf file (TO DO: should it be time_now?)
-    io.write_sync_datetime(f, datetime_now)
+    return digitalOutput
 
 
 def __find_bitalino(macAddress, deviceName, general_event, specific_event):
-        """
-		Loop to find and connect to the bitalino device by macAddress.
-	    """
+    """Loop to find and connect to the bitalino device by macAddress."""
+    
+    ## Connection Loop
+    print 'Looking for bitalino... -- NAME: {} -- ADDR: {}'.format(deviceName, macAddress)
+    while True:
+                
+        try:
+            ## Check for event interruption
+            if (specific_event.is_set() or general_event.is_set()):
+                raise ValueError('Closing the acquisition.')
+
+            device = bt.BITalino(macAddress, timeout=1)  # connect to BITalino
+            print 'Running! -- NAME: {} -- ADDR: {}'.format(deviceName, macAddress)
+
+            break
+
+        except ValueError as e:
+            print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
+            return None
         
-        ## Connection Loop
-        print 'Looking for bitalino... -- NAME: {} -- ADDR: {}'.format(deviceName, macAddress)
-        while True:
-                    
-            try:
-                ## Check for event interruption
-                if (specific_event.is_set() or general_event.is_set()):
-                    raise ValueError('Closing the acquisition.')
+        except Exception as e:
+            print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
+            pass
 
-                device = bt.BITalino(macAddress, timeout=5)  # connect to BITalino
-                print 'Running! -- NAME: {} -- ADDR: {}'.format(deviceName, macAddress)
-
-                break
-
-            except ValueError as e:
-                print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
-                return None
-            
-            except Exception as e:
-                #print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
-                pass
-
-        return device
+    return device
 
 
 def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                     acqChannels, acqLabels, digitalOutput, 
-                    nSamples, sync_delta, i_datetime, 
+                    samplingRate, nSamples, sync_delta, i_datetime, 
                     specific_event, general_event,
                     mem_profile, time_profile,
-                    master, support):
-        """
-		Loop to continuously read the channels from a connected bitalino device according to input configuration.
-	    """
+                    master, support, interface):
+    """Loop to continuously read the channels from a connected bitalino device according to input configuration."""
+    
+    # Open file
+    file_date = datetime.datetime.now().strftime("{}_%Y-%m-%d_%H-%M-%S".format(macAddress.replace(':', '')))
+    filename = file_date + '.h5'
+    prof_filename = file_date + '_profiling' + '.txt'
+    file_path = os.path.join(path_to_save, filename)
+    prof_file_path = os.path.join(path_to_save, prof_filename)
 
-        # Acquisition Loop
-        with io.open_h5file(path_to_save,  macAddress, acqChannels, acqLabels, nSamples) as f:
-            
-            # Acquisition iteration
-            old_sync_datetime = i_datetime
+    ioos.setup_h5file_os(file_path, macAddress)
 
-            for i in xrange(0, 2*60*60):
+    # Acquisition Loop
+    with ioos.open_h5file_os(file_path) as f:
 
-                try:
+        # Get base group from file
+        r_group = ioos.get_root_group(f)
+        ioos.overwrite_dsets(r_group, acqChannels)
 
-                    ## Check for event interuption
-                    if (specific_event.is_set() or general_event.is_set()):
-                        raise ValueError('Closing the acquisition.')
+        for i in xrange(0, 2*60*60):
 
-                    ## Check for time profiling
-                    if time_profile:
-                        time_before_read = timeit.default_timer()
-                        
-                    dataAcquired = device.read(nSamples)
+            try:
 
-                    ## Check for time profiling
-                    if time_profile:
-                        time_after_read = timeit.default_timer()
-                        #io.log_time(f, time_before_read, time_after_read)
+                ## Check for event interuption
+                if (specific_event.is_set() or general_event.is_set()):
+                    raise ValueError('Closing the acquisition.')
 
-                    ## Check for synchronization
-                    if master:
-                        datetime_now = datetime.datetime.now()
-                        if  datetime_now - old_sync_datetime >= sync_delta:
-                            __sync_bitalino(device, f, setup, datetime_now, dataAcquired)
-                            old_sync_datetime = datetime_now
+                ## Initiate profiling structure
+                if time_profile or mem_profile:
+                    profile_list = [0, 0, 0]
 
-                    ## Compute necessary support for OpenSignals compatibility
-                    print support
-                    if support:
-                        support = sp.compute_support(dataAcquired)
-                        print support
+                ## Check for time profiling
+                if time_profile:
+                    time_before_read = timing() 
+                    profile_list[1] = time_before_read
+                    
+                ## Read array of samples from the device in acquisition
+                ndsignal = device.read(nSamples)
 
-                    ## Check used system resources
-                    if mem_profile:
-                        mem = psutil.virtual_memory()['used']
-                        #io.log_mem(f, mem)
+                if i == 0:
+                    time_init_acq = epoch_time()
+                    old_sync_time = timing()
+                    time_init_acq = time_init_acq - np.true_divide(nSamples, samplingRate)
+                    
+                ## Check for time profiling
+                if time_profile:
+                    # Allocate values to deal with timed operations during acquisiton
+                    time_after_read = timing()  
+                    profile_list[2] = time_after_read
 
-                    io.write_h5file(f, macAddress, dataAcquired, 
-                                    acqChannels, nSamples)
-                        
+                ## Check for synchronization
+                if master:
+                    time_now = timing()
+                    #print time_now
+                    if  (time_now - old_sync_time) >= sync_delta:
+                        #print 'Synching'
+                        # Synchronize the device, sync_time_flag should have high precision
+                        digitalOutput = __sync_bitalino(device, ndsignal)
+                        sync_time_flag = timing()
+                        ioos.write_sync_time(r_group, digitalOutput, sync_time_flag)
+                        old_sync_time = sync_time_flag
 
-                except Exception as e:
-                    #io.create_opensignals_mdata(f, setup, i_datetime, i)
-                    print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
-                    break
+                ## Compute necessary support for OpenSignals compatibility
+                if support:
+                    support = sp.compute_support(ndsignal)
+                    ioos.write_sp_h5file(r_group, acqChannels, support)
+                    
+                ## Check used system resources
+                if mem_profile:
+                    process = psutil.Process(os.getpid())
+                    mem = process.memory_info().rss
+                    profile_list[0] = mem_profile
+
+                ## Send recieved data to websocket
+                if interface:
+                    t_str = np.array2string(ndsignal)
+                    MESSAGE = t_str
+                    UDP_IP = "127.0.0.1"
+                    UDP_PORT = port
+                    sock = socket.socket(socket.AF_INET, # Internet
+                                        socket.SOCK_DGRAM) # UDP
+                    sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
+                
+                if time_profile or mem_profile:
+                    with open(prof_file_path, 'a') as w:
+                        for profile_item in profile_list:
+                            print >> w, profile_item
+                        print >> w, '\n'
+
+                ioos.write_h5file(r_group, acqChannels, ndsignal)
+
+            except Exception as e:
+                len_acq = len(ioos.get_analog_channel(r_group, 1))
+                dur_acq = np.true_divide(len_acq, samplingRate)
+                if support:
+                    ioos.write_t_support(r_group, acqChannels)
+                #ioos.close_file(r_group, setup, len_acq)
+                print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
+                break
 
 
 def _process(path_to_save, macAddress, setup, general_event, specific_event):
-    """
-		Main logic for the acquisition loop.
-	"""
+    """Main logic for the acquisition loop."""
 
     # Parse configuration
     deviceName = setup.get('deviceName', 'Anonymous device')
@@ -136,25 +183,23 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
     resolution = setup.get('resolution', [ 4,  1,  1,  1,  1, 10, 10, 10, 10,  6,  6])
     samplingRate = setup.get('samplingRate', 1000)
     master = setup.get('master', 0)
-    syncInterval = setup.get('syncInterval')
+    syncInterval = setup.get('syncInterval') * 60
     digitalOutput = setup.get('digitalOutput', [1, 1])
     nSamples = setup.get('nSamples', 1000)
     master = setup.get('master', 0)
     support = setup.get('support', 0)
-    time_profile = setup.get('time_profile', 0)
-    mem_profile = setup.get('mem_profile', 0)
+    time_profile = setup.get('time_profile', 1)
+    mem_profile = setup.get('mem_profile', 1)
+    interface = setup.get('interface', 0)
+    port = setup.get('port', 5005)
 
-    # Allocate sychronization interval
-    if master:
-        sync_delta = datetime.timedelta(minutes=syncInterval)
-        syncInterval = sync_delta
 
     ## Add subfolder for Device
     path_to_save = os.path.join(path_to_save, deviceName)
     if not os.path.exists(path_to_save):
         os.makedirs(path_to_save)
 
-    # Enter Main loop, handling long-term acquisition (restart the samples reading in the event of a disruption)
+    # Enter Main loop, handling long-term acquisition (restart the reading in the event of a disruption)
     while True:
 
         device = __find_bitalino(macAddress, deviceName, general_event, specific_event)
@@ -174,10 +219,10 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
         # Read from device
         __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                         acqChannels, acqLabels, digitalOutput, 
-                        nSamples, syncInterval, i_datetime, 
+                        samplingRate, nSamples, syncInterval, i_datetime, 
                         specific_event, general_event,
                         mem_profile, time_profile,
-                        master, support)
+                        master, support, interface)
 
         device.close()  ## close device
 
