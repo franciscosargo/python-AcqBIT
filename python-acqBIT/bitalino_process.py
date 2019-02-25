@@ -4,6 +4,7 @@ import datetime
 import os
 import sys
 import psutil
+import socket
 
 # Third Party
 import bitalino as bt
@@ -150,7 +151,7 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                     t_str = np.array2string(ndsignal)
                     MESSAGE = t_str
                     UDP_IP = "127.0.0.1"
-                    UDP_PORT = port
+                    UDP_PORT = 5005
                     sock = socket.socket(socket.AF_INET, # Internet
                                         socket.SOCK_DGRAM) # UDP
                     sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
@@ -190,7 +191,7 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
     support = setup.get('support', 0)
     time_profile = setup.get('time_profile', 1)
     mem_profile = setup.get('mem_profile', 1)
-    interface = setup.get('interface', 0)
+    interface = setup.get('interface', 1)
     port = setup.get('port', 5005)
 
 
