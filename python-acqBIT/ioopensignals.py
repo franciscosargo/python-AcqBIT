@@ -72,24 +72,6 @@ def write_h5file(r_group, acqChannels, ndsignal):
         _write_acq_channel(r_group, dset_name, ndsignal[:, i])
 
 
-def write_sp_h5file(r_group, acqChannels, support):
-    """ Open and *support data* write to a previously opened h5 file for the acquisition."""
-    digital_support_dset_names = ['dig_channel_{}'.format(dgNr + 1) for dgNr in xrange(0, 3)]
-    analog_support_dset_names = ['channel_{}'.format(chNr + 1)  for chNr in acqChannels]
-    #support_dset_names = ['support/level_{}/{}/{}'.format(level, dset_name, metric) 
-                           #for dset_name in digital_support_dset_names + analog_support_dset_names
-                           #for level in [10, 100, 1000]
-                           #for metric in ['Mx', 'mx', 'mean', 'mean_x2', 'sd', 't']]
-    
-    # Set the datasets on the file
-    for l, level in enumerate([10, 100, 1000]):
-        for m, metric in  enumerate(['Mx', 'mx', 'mean', 'mean_x2', 'sd']):
-            for i, dset_name in enumerate(digital_support_dset_names + analog_support_dset_names):
-                dset_name = 'support/level_{}/{}/{}'.format(level, dset_name, metric) 
-                support_arr = support[l][:, m, i]
-                _write_acq_channel(r_group, dset_name, support_arr)
-
-
 def write_sync_time(r_group, digitalOutput, sync_time_flag):
     """ Write synchronization event to disk, in the form of the subsequent digital output 
         and the respective time flag."""
@@ -105,25 +87,6 @@ def write_sync_time(r_group, digitalOutput, sync_time_flag):
     shape_0 = dset.shape[0]
     dset.resize((shape_0 + 1, 1))
     dset[shape_0] = sync_time_flag
-
-
-def write_t_support(r_group, acqChannels):
-    digital_support_dset_names = ['dig_channel_{}'.format(dgNr + 1) for dgNr in xrange(0, 3)]
-    analog_support_dset_names = ['channel_{}'.format(chNr + 1)  for chNr in acqChannels]
-    #support_dset_names = ['support/level_{}/{}/{}'.format(level, dset_name, metric) 
-                           #for dset_name in digital_support_dset_names + analog_support_dset_names
-                           #for level in [10, 100, 1000]
-                           #for metric in ['Mx', 'mx', 'mean', 'mean_x2', 'sd', 't']]
-    
-    # Set the datasets on the file
-    for l, level in enumerate([10, 100, 1000]):
-        for i, dset_name in enumerate(digital_support_dset_names + analog_support_dset_names):
-            dset_name_Mx = 'support/level_{}/{}/Mx'.format(level, dset_name)
-            dset_name = 'support/level_{}/{}/t'.format(level, dset_name)
-            end = r_group[dset_name_Mx].shape[0]
-            t = range(0, end, level)
-            del r_group[dset_name]
-            r_group[dset_name] = t
 
 
 def _write_sp_h5file(r_group, support, acqChannels):
@@ -208,17 +171,17 @@ def overwrite_dsets(r_group, acqChannels):
             # Set attributes of the new dataset
             r_group[dset_name].attrs[k] = attrs[k]
 
-    #dset_name = 'events/digital'
-    #del r_group[dset_name]
-    #r_group.create_dataset(dset_name, 
-                           #dtype='uint16', shape=(0, 4), 
-                           #maxshape=(None, 4), chunks=(1024, 1)) 
-#
-    #dset_name = 'events/sync'
-    #del r_group[dset_name]
-    #r_group.create_dataset(dset_name, 
-                           #dtype='float32', shape=(0, 1), 
-                           #maxshape=(None, 1), chunks=(1024, 1))   
+    dset_name = 'events/digital'
+    del r_group[dset_name]
+    r_group.create_dataset(dset_name, 
+                           dtype='uint16', shape=(0, 4), 
+                           maxshape=(None, 4), chunks=(1024, 1)) 
+
+    dset_name = 'events/sync'
+    del r_group[dset_name]
+    r_group.create_dataset(dset_name, 
+                           dtype='float32', shape=(0, 1), 
+                           maxshape=(None, 1), chunks=(1024, 1))   
 
     
 def get_analog_channel(r_group, acqChannel):
@@ -228,7 +191,6 @@ def get_analog_channel(r_group, acqChannel):
 
 def get_root_group(file_obj):
     """Wrap extraction of root group from HDF5 file object"""
-
     return file_obj[file_obj.keys()[0]]
 
 
