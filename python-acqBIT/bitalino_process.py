@@ -126,9 +126,8 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                 ## Check for synchronization
                 if master:
                     time_now = timing()
-                    #print time_now
                     if  (time_now - old_sync_time) >= sync_delta:
-                        #print 'Synching'
+                        
                         # Synchronize the device, sync_time_flag should have high precision
                         digitalOutput = __sync_bitalino(device, ndsignal)
                         sync_time_flag = timing()
@@ -136,9 +135,9 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                         old_sync_time = sync_time_flag
 
                 ## Compute necessary support for OpenSignals compatibility
-                if support:
-                    support = sp.compute_support(ndsignal)
-                    ioos.write_sp_h5file(r_group, acqChannels, support)
+                #if support:
+                 #   support = sp.compute_support(ndsignal)
+                  #  ioos.write_sp_h5file(r_group, acqChannels, support)
                     
                 ## Check used system resources
                 if mem_profile:
@@ -156,21 +155,28 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                                         socket.SOCK_DGRAM) # UDP
                     sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
                 
+                ## Save time quantifiaction on file
                 if time_profile or mem_profile:
                     with open(prof_file_path, 'a') as w:
                         for profile_item in profile_list:
                             print >> w, profile_item
                         print >> w, '\n'
 
+                ## Write data to h5 file
                 ioos.write_h5file(r_group, acqChannels, ndsignal)
 
             except Exception as e:
+                
                 len_acq = len(ioos.get_analog_channel(r_group, 1))
                 dur_acq = np.true_divide(len_acq, samplingRate)
-                r_group.attrs['init_time'] = time_init_acq
+
+                #if len_acq:
+                 #   r_group.attrs['init_time'] = time_init_acq
+                
                 if support:
-                    ioos.write_t_support(r_group, acqChannels)
-                #ioos.close_file(r_group, setup, len_acq)
+                    print support
+                    ioos.write_sp_h5file(r_group, support, acqChannels)
+
                 print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
                 break
 
@@ -192,9 +198,8 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
     support = setup.get('support', 0)
     time_profile = setup.get('time_profile', 1)
     mem_profile = setup.get('mem_profile', 1)
-    interface = setup.get('interface', 1)
+    interface = setup.get('interface', 0)
     port = setup.get('port', 5005)
-
 
     ## Add subfolder for Device
     path_to_save = os.path.join(path_to_save, deviceName)

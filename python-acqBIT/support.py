@@ -1,22 +1,19 @@
 import numpy as np
 
-def support_metrics(array):
-    Mx = array.max(axis=0)
-    mx = array.min(axis=0)
-    mean = np.mean(array, axis=0)
-    mean_x2 = np.mean(array, axis=0)**2
-    sd = np.std(array, axis=0)
-    return np.stack((Mx, mx, mean, mean_x2, sd))
-
-
-def _compute_support(level, ndsignal):
-    n = ndsignal.shape[0]
+def _compute_support(level, ndsignal, n, p):
     N = n/level
-    data = ndsignal[:, 1:]
-    list_split = np.array_split(data, N)
-    support = np.array(map(support_metrics, list_split), copy=False)
-    return support
+    ndarray = ndsignal.reshape(N, level, p)
+    Mx = ndarray.max(axis=1)
+    mx = ndarray.min(axis=1)
+    mean = np.mean(ndarray, axis=1)
+    mean_x2 = np.mean(ndarray, axis=1)**2
+    sd = np.std(ndarray, axis=1)
+    t = list(xrange(0, n, level))
+    return [Mx, mx, mean, mean_x2, sd, t]
 
 
 def compute_support(ndsignal):
-    return [_compute_support(level, ndsignal) for level in [10, 100, 1000]]
+    ndsignal = ndsignal
+    n = ndsignal.shape[0]
+    p = ndsignal.shape[1]
+    return [_compute_support(level, ndsignal, n, p) for level in [10, 100, 1000]]
