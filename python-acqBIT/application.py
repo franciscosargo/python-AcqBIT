@@ -21,28 +21,25 @@
 """
 from __future__ import print_function
 
-# encoding=utf8
+import datetime
+import json
+import logging
+import multiprocessing as mp
+import os
 import sys
+
+import pystray
+from PIL import Image
+from pystray import MenuItem as item
+
+from bitalino_process import _process
+
 #reload(sys)
 #sys.setdefaultencoding('utf8')
 
-# Native            
-import os
-import multiprocessing as mp
-import json
-import datetime
 
-# Third Party
-import pystray
-from pystray import MenuItem as item
-from PIL import Image
 
-# local
-from bitalino_process import _process
 
-# Native
-# Logging snippet
-import logging
 logger = logging.getLogger(__name__)
 
 # Icon methods

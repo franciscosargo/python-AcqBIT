@@ -12,19 +12,14 @@ python-acqBIT Application, with the use of h5py API.
    :synopsis: I/O operations to produce opensignals complacent files.
 .. moduleauthor:: Francisco Sargo <francisco.simao.sargo@tecnico.ulisboa.pt>
 """
-# python
 import os
-
-# 3rd party
-import h5py as h5
-import numpy as np
-import matplotlib.pyplot as plt
-
-# local
-import support as sp
-
-
 import pdb
+
+import h5py as h5
+import matplotlib.pyplot as plt
+import numpy as np
+
+import support as sp
 
 
 def open_h5file_os(path_file):
@@ -192,20 +187,3 @@ def get_analog_channel(r_group, acqChannel):
 def get_root_group(file_obj):
     """Wrap extraction of root group from HDF5 file object"""
     return file_obj[file_obj.keys()[0]]
-
-
-
-
-
-          
-
-
-
-
-
-
-
-
-
-
-

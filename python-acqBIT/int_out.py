@@ -20,14 +20,13 @@
  
 """
 
-# python
-import time
 import datetime
 import os
+import time
 
-# 3rd party
-import numpy as np
 import h5py as h5
+import numpy as np
+
 
 def _write_acq_channel(r_grp, channelName, channelSignal, nSamples):
     """
@@ -204,5 +203,3 @@ def write_sync_datetime(f, datetime_now):
     #data = r_group[dset_name]
     #del r_group[dset_name]
     #r_group.create_dataset(dset_name, dtype='uint16', data=t.reshape(length, 1))    
-
-
