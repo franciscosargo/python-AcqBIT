@@ -3,4 +3,5 @@ settings.json
 **dist
 **.spec
 **.cfg
+**.pyc
 **.json

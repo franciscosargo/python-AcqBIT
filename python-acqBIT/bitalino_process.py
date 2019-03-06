@@ -152,11 +152,6 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                                              sync_time_flag)
                         old_sync_time = sync_time_flag
 
-                # Compute necessary support for OpenSignals compatibility
-                # if support:
-                #   support = sp.compute_support(ndsignal)
-                #  ioos.write_sp_h5file(r_group, acqChannels, support)
-
                 # Check used system resources
                 if mem_profile:
                     process = psutil.Process(os.getpid())
@@ -167,8 +162,6 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
 
                 # Send recieved data to websocket
                 if interface:
-                    #t_str = ndsignal[:100,:].tostring()
-                    #t_str = '\n'.join(' '.join('%0.1f' %x for x in y) for y in ndsignal)
                     t_str = ndsignal.tobytes()
                     MESSAGE = t_str
                     s.sendto(MESSAGE, (UDP_IP, UDP_PORT))
@@ -176,9 +169,11 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                 # Save time quantifiaction on file
                 if time_profile or mem_profile:
                     with open(prof_file_path, 'a') as w:
-                        for profile_item in profile_list:
-                            print >> w, profile_item
+                        #for profile_item in profile_list:
+                            #print >> w, profile_item
+                        print >> w, profile_list
                         print >> w, '\n'
+
 
                 # Write data to h5 file
                 ioos.write_h5file(r_group, acqChannels, ndsignal)
