@@ -21,6 +21,8 @@ import numpy as np
 
 import support as sp
 
+import pdb
+
 
 def open_h5file_os(path_file):
     """Wrap h5py constructor"""
@@ -37,29 +39,30 @@ def setup_h5file_os(path_file, macAddress):
         r_group = dummy_f[dummy_f.keys()[0]]
         group_id = f.require_group('/')
         dummy_f.copy(r_group, group_id)
-        #old_group_name = f.keys()[0]
-        #f[str(macAddress)] = f[old_group_name]
-        #del f[old_group_name]
-        
+        old_group_name = f.keys()[0]
+        if str(macAddress) not in old_group_name:
+            f[str(macAddress)] = f[old_group_name]
+            del f[old_group_name]
 
+        
 def _write_acq_channel(r_group, channelName, signal):
     """Write 1D signal from acquistion to the end of h5 dataset."""
 
     # Write acquisition channel to h5 dset
-    nSamples = signal.shape[0]
+    nsamples = signal.shape[0]
     dset = r_group[channelName]
-    nSamples_ds = dset.shape[0]
-    dset.resize((nSamples_ds + nSamples, 1))
-    dset[-nSamples:, 0] = signal
+    nsamples_ds = dset.shape[0]
+    dset.resize((nsamples_ds + nsamples, 1))
+    dset[-nsamples:, 0] = signal
 
 
-def write_h5file(r_group, acqChannels, ndsignal):
+def write_h5file(r_group, acq_channels, ndsignal):
     """ Open and *acquisition data* write to a previously opened h5 file for the acquisition."""
 
     # Set names of the datasets, order according to the data array
     nseq_dset_names = ['raw/nSeq']
-    digital_dset_names = ['digital/digital_{}'.format(dgNr + 1) for dgNr in xrange(0, 4)]
-    analog_dset_names = ['raw/channel_{}'.format(chNr + 1) for chNr in acqChannels]
+    digital_dset_names = ['digital/digital_{}'.format(dgNr) for dgNr in xrange(1, 5)]
+    analog_dset_names = ['raw/channel_{}'.format(chNr) for chNr in acq_channels]
     dset_names = nseq_dset_names + digital_dset_names + analog_dset_names
 
     # Set the datasets on the file
@@ -67,7 +70,7 @@ def write_h5file(r_group, acqChannels, ndsignal):
         _write_acq_channel(r_group, dset_name, ndsignal[:, i])
 
 
-def write_sync_time(r_group, digitalOutput, sync_time_flag):
+def write_sync_time(r_group, digital_output, sync_time_flag):
     """ Write synchronization event to disk, in the form of the subsequent digital output 
         and the respective time flag."""
         
@@ -75,7 +78,7 @@ def write_sync_time(r_group, digitalOutput, sync_time_flag):
     dset = r_group['events/digital']
     shape_0 = dset.shape[0]
     dset.resize((shape_0 + 1, 4))
-    dset[shape_0, :] = digitalOutput
+    dset[shape_0, :] = digital_output
 
     # Write synchronization time flag
     dset = r_group['events/sync']
@@ -84,99 +87,118 @@ def write_sync_time(r_group, digitalOutput, sync_time_flag):
     dset[shape_0] = sync_time_flag
 
 
-def _write_sp_h5file(r_group, support, acqChannels):
+def _write_sp_h5file(r_group, support, acq_channels):
     digital_support_dset_names = ['dig_channel_{}'.format(dgNr) for dgNr in xrange(1, 5)]
-    analog_dset_support_names = ['channel_{}'.format(chNr + 1)  for chNr in acqChannels]
+    analog_dset_support_names = ['channel_{}'.format(chNr)  for chNr in acq_channels]
+
     for l, level in enumerate([10, 100, 1000]):
         for i, channel_name in enumerate(digital_support_dset_names + analog_dset_support_names):
 
-                del r_group['support/level_{}/{}/Mx'.format(level, channel_name)]
-
+                #del r_group['support/level_{}/{}/Mx'.format(level, channel_name)]
                 support_arr = support[l][0][:, i:i+1]
                 r_group.create_dataset('support/level_{}/{}/Mx'.format(level, channel_name), dtype='uint16',
                                         data=support_arr)
                 
-                del r_group['support/level_{}/{}/mx'.format(level, channel_name)]
+                #del r_group['support/level_{}/{}/mx'.format(level, channel_name)]
                 support_arr = support[l][1][:, i:i+1]
                 r_group.create_dataset('support/level_{}/{}/mx'.format(level, channel_name), dtype='uint16',
                                         data=support_arr)
                 
-                del r_group['support/level_{}/{}/mean'.format(level, channel_name)]
+                #del r_group['support/level_{}/{}/mean'.format(level, channel_name)]
                 support_arr = support[l][2][:, i:i+1]
                 r_group.create_dataset('support/level_{}/{}/mean'.format(level, channel_name), dtype='float32',
                                         data=support_arr)
                 
-                del r_group['support/level_{}/{}/mean_x2'.format(level, channel_name)]
+                #del r_group['support/level_{}/{}/mean_x2'.format(level, channel_name)]
                 support_arr = support[l][3][:, i:i+1]
                 r_group.create_dataset('support/level_{}/{}/mean_x2'.format(level, channel_name), dtype='uint32',
                                         data=support_arr)
                 
-                del r_group['support/level_{}/{}/sd'.format(level, channel_name)]
+                #del r_group['support/level_{}/{}/sd'.format(level, channel_name)]
                 support_arr = support[l][4][:, i:i+1]
                 r_group.create_dataset('support/level_{}/{}/sd'.format(level, channel_name), dtype='float32',
                                         data=support_arr)
                 
-                del r_group['support/level_{}/{}/t'.format(level, channel_name)]
+                #del r_group['support/level_{}/{}/t'.format(level, channel_name)]
                 support_arr = np.array(support[l][5], copy=False).reshape(len(support[l][5]), 1)
 
                 r_group.create_dataset('support/level_{}/{}/t'.format(level, channel_name), dtype='uint32',
                                         data=support_arr)
 
 
-def write_sp_h5file(r_group, support, acqChannels):
+def write_sp_h5file(r_group, support, acq_channels):
 
     # Get channels name
-    digital_dset_names = ['digital/digital_{}'.format(dgNr + 1) for dgNr in xrange(0, 4)]
-    analog_dset_names = ['raw/channel_{}'.format(chNr + 1)  for chNr in acqChannels]
+    digital_dset_names = ['digital/digital_{}'.format(dgNr) for dgNr in xrange(1, 5)]
+    analog_dset_names = ['raw/channel_{}'.format(chNr) for chNr in acq_channels]
     
     # Load the signal
-    ndsignal = np.array([r_group[dset_name][:] for dset_name in digital_dset_names + analog_dset_names]).T[0]
+    ndsignal = np.array([r_group[dset_name][:] for dset_name in
+                         digital_dset_names + analog_dset_names]).T[0]
+    assert ndsignal.shape[1] == len(digital_dset_names + analog_dset_names)
+    assert ndsignal.shape[0] == r_group[dset_name].shape[0]
 
     # Compute support and save it
     support = sp.compute_support(ndsignal)
 
-    _write_sp_h5file(r_group, support, acqChannels)
+    _write_sp_h5file(r_group, support, acq_channels)
     r_group.attrs['nsamples'] = len(ndsignal)
-    
 
-def overwrite_dsets(r_group, acqChannels):
+
+def overwrite_dsets(r_group, acq_channels):
     """ Overwrite existing template and corresponding datasets."""
 
     # Set names of the datasets, order according to the data array
     nseq_dset_names = ['raw/nSeq']
-    digital_dset_names = ['digital/digital_{}'.format(dgNr + 1) for dgNr in xrange(0, 4)]
-    analog_dset_names = ['raw/channel_{}'.format(chNr + 1)  for chNr in xrange(0, 6)]
+    digital_dset_names = ['digital/digital_{}'.format(dgNr) for dgNr in xrange(1, 5)]
+    analog_dset_names = ['raw/channel_{}'.format(chNr)  for chNr in xrange(1, 7)]
+    
+    # Set names of datasets to save during acquisition
+    analog_dset_names_to_save = ['raw/channel_{}'.format(chNr)  for chNr in acq_channels]
+    
+    # Set names of support datasets to delete (all of them)
+    digital_support_dset_names = ['dig_channel_{}'.format(dgNr) for dgNr in xrange(1, 5)]
+    analog_support_dset_names = ['channel_{}'.format(chNr) for chNr in xrange(1, 7)]
+
     dset_names = nseq_dset_names + digital_dset_names + analog_dset_names
-    digital_support_dset_names = ['dig_channel_{}'.format(dgNr) for dgNr in xrange(1, 4)]
-    analog_support_dset_names = ['channel_{}'.format(chNr + 1)  for chNr in acqChannels]
+    dset_names_to_save = nseq_dset_names + digital_dset_names + analog_dset_names_to_save
     support_dset_names = ['support/level_{}/{}/{}'.format(level, dset_name, metric) 
                            for dset_name in digital_support_dset_names + analog_support_dset_names
                            for level in [10, 100, 1000]
-                           for metric in ['Mx', 'mx', 'mean', 'mean_x2', 'sd']]
+                           for metric in ['Mx', 'mx', 'mean', 'mean_x2', 'sd', 't']]
 
-    # Set the datasets on the file
+    # Delete the datasets on the file
     for dset_name in dset_names:
         attrs = r_group[dset_name].attrs
         del r_group[dset_name]
+    
+    # Set the datasets for acquisition    
+    for dset_name in dset_names_to_save:
         r_group.create_dataset(dset_name, 
-                               dtype='uint16', shape=(0, 1), 
-                               maxshape=(None, 1), chunks=(1024, 1))
+                                dtype='uint16', shape=(0, 1), 
+                                maxshape=(None, 1), chunks=(1024, 1))
 
         for k in attrs.keys():
             # Set attributes of the new dataset
             r_group[dset_name].attrs[k] = attrs[k]
+   
+    # Delete support datasets
+    for dset_name in support_dset_names:
+        del r_group[dset_name]
 
     dset_name = 'events/digital'
     del r_group[dset_name]
-    r_group.create_dataset(dset_name, 
+    r_group.create_dataset(dset_name,
                            dtype='uint16', shape=(0, 4), 
                            maxshape=(None, 4), chunks=(1024, 1)) 
 
     dset_name = 'events/sync'
     del r_group[dset_name]
-    r_group.create_dataset(dset_name, 
+    r_group.create_dataset(dset_name,
                            dtype='float32', shape=(0, 1), 
                            maxshape=(None, 1), chunks=(1024, 1))   
+
+
 
     
 def get_analog_channel(r_group, acqChannel):

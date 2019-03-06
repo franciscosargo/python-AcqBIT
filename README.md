@@ -22,14 +22,14 @@ The acquisition is governed by the use of a configuration file in .json format. 
 Each entry within the `"device"` field is a .json substructure, with key equal to the MAC address or Virtual COM port (VCP) of your BITalino device. Each entry should thus be inserted in the form `WINDOWS/Linux - XX:XX:XX:XX:XX:XX | MAC - /dev/tty.BITalino-XX-XX-DevB`, depending on your platform.
 
 The respective substructure of the `"device"` holds the following subfields:
-- `"acqChannels"`: List of analog channels to be acquired from the device (e.g. [1, 6] acquires channels A1 and A6)
-- `"samplingRate"`: Sampling rate at which data should be acquired (i.e. 1000, 100, 10 or 1 Hz)
-- `"acqLabels"`: Human-readable descriptor associated with each channel acquired by the device, and that will be used to name the properties on the JSON-formatted structure created for streaming (**NOTE:** BITalino always sends a sequence number, two digital inputs and two digital outputs, hence the 5 first entries in the `"labels"` array)
+- `"acq_channels"`: List of analog channels to be acquired from the device (e.g. [1, 6] acquires channels A1 and A6)
+- `"sampling_rate"`: Sampling rate at which data should be acquired (i.e. 1000, 100, 10 or 1 Hz)
+- `"acq_labels"`: Human-readable descriptor associated with each channel acquired by the device, and that will be used to name the properties on the JSON-formatted structure created for streaming (**NOTE:** BITalino always sends a sequence number, two digital inputs and two digital outputs, hence the 5 first entries in the `"labels"` array)
 - `master`: Either `True` or `False`, being the flag denoting if the current device is master synchronizer or not.  (**NOTE:** Only one device should be master.)
-- `"syncInterval`: The interval in minutes between each module acquistion synchronization, with the triggering of the digital channels of the master device (**NOTE:** Only value in the master device is considered.).
-- `"resolution"`: Resolution for each of the acquisition channels as specified in the field `"acqLabels"`.
-- `"nSamples"`: Number of samples read from a running BITalino device within each iteration of the acquisition.
-- `"deviceName`: Human readable device name, useful for posterior indentification.
+- `"sync_interval`: The interval in minutes between each module acquistion synchronization, with the triggering of the digital channels of the master device (**NOTE:** Only value in the master device is considered.).
+- `"resolution"`: Resolution for each of the acquisition channels as specified in the field `"acq_labels"`.
+- `"nsamples"`: Number of samples read from a running BITalino device within each iteration of the acquisition.
+- `"device_name`: Human readable device name, useful for posterior indentification.
 - `"macAddress`: MAC address or Virtual COM port (VCP) of BITalino device.
 
 # Running from Sources

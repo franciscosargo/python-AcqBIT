@@ -33,18 +33,18 @@ def __sync_bitalino(device,
     # Change digital output in master device
     digitalArray = [int(not bool(dg_val))
                     for dg_val in list(ndsignal[-1, 3:5])]
-    digitalOutput = np.array(list(ndsignal[-1, 1:3]) + digitalArray,
+    digital_output = np.array(list(ndsignal[-1, 1:3]) + digitalArray,
                              copy=False)
     device.trigger(digitalArray=digitalArray)
-    return digitalOutput
+    return digital_output
 
 
-def __find_bitalino(macAddress, deviceName, general_event, specific_event):
+def __find_bitalino(macAddress, device_name, general_event, specific_event):
     """Loop to find and connect to the bitalino device by macAddress."""
 
     # Connection Loop
     print ('Looking for bitalino...'
-           '-- NAME: {} -- ADDR: {}').format(deviceName, macAddress)
+           '-- NAME: {} -- ADDR: {}').format(device_name, macAddress)
 
     while True:
 
@@ -55,26 +55,26 @@ def __find_bitalino(macAddress, deviceName, general_event, specific_event):
 
             device = bt.BITalino(macAddress, timeout=1)  # connect to BITalino
             print ('Running!'
-                   '-- NAME: {} -- ADDR: {}').format(deviceName, macAddress)
+                   '-- NAME: {} -- ADDR: {}').format(device_name, macAddress)
 
             break
 
         except ValueError as e:
             print ('{}'
-                   '-- NAME: {} -- ADDR: {}').format(e, deviceName, macAddress)
+                   '-- NAME: {} -- ADDR: {}').format(e, device_name, macAddress)
             return None
 
         except Exception as e:
             print ('{}'
-                   '-- NAME: {} -- ADDR: {}').format(e, deviceName, macAddress)
+                   '-- NAME: {} -- ADDR: {}').format(e, device_name, macAddress)
             pass
 
     return device
 
 
-def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
-                    acqChannels, acqLabels, digitalOutput,
-                    samplingRate, nSamples, sync_delta, i_datetime,
+def __read_bitalino(device, path_to_save, macAddress, device_name, setup,
+                    acq_channels, acq_labels, digital_output,
+                    sampling_rate, nsamples, sync_delta, i_datetime,
                     specific_event, general_event,
                     mem_profile, time_profile,
                     master, support, interface, port):
@@ -97,7 +97,7 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
         f = ioos.open_h5file_os(file_path)
         # Get base group from file
         r_group = ioos.get_root_group(f)
-        ioos.overwrite_dsets(r_group, acqChannels)
+        ioos.overwrite_dsets(r_group, acq_channels)
 
         if interface:
             UDP_IP = "127.0.0.1"
@@ -123,14 +123,14 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                     profile_list[1] = time_before_read
 
                 # Read array of samples from the device in acquisition
-                ndsignal = device.read(nSamples)
+                ndsignal = device.read(nsamples)
 
                 if i == 0:
                     time_init_acq = epoch_time()
                     old_sync_time = timing()
                     time_init_acq = (time_init_acq -
-                                     np.true_divide(nSamples,
-                                                    samplingRate))
+                                     np.true_divide(nsamples,
+                                                    sampling_rate))
 
                 # Check for time profiling
                 if time_profile:
@@ -146,9 +146,9 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
 
                         # Synchronize the device, sync_time_flag
                         #  should have high precision
-                        digitalOutput = __sync_bitalino(device, ndsignal)
+                        digital_output = __sync_bitalino(device, ndsignal)
                         sync_time_flag = timing()
-                        ioos.write_sync_time(r_group, digitalOutput,
+                        ioos.write_sync_time(r_group, digital_output,
                                              sync_time_flag)
                         old_sync_time = sync_time_flag
 
@@ -174,43 +174,42 @@ def __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
                         print >> w, profile_list
                         print >> w, '\n'
 
-
                 # Write data to h5 file
-                ioos.write_h5file(r_group, acqChannels, ndsignal)
+                ioos.write_h5file(r_group, acq_channels, ndsignal)
 
             except Exception as e:
                 print ('{}'
-                       '-- NAME: {} -- ADDR: {}').format(e, deviceName,
+                       '-- NAME: {} -- ADDR: {}').format(e, device_name,
                                                          macAddress)
                 break
 
     finally:
 
         if support:
-            ioos.write_sp_h5file(r_group, support, acqChannels)
+            ioos.write_sp_h5file(r_group, support, acq_channels)
 
         f.close()
 
         if interface:
             s.close()
         e = 'The acquistion is succesfully closed.'
-        print '{} -- NAME: {} -- ADDR: {}'.format(e, deviceName, macAddress)
+        print '{} -- NAME: {} -- ADDR: {}'.format(e, device_name, macAddress)
 
 
 def _process(path_to_save, macAddress, setup, general_event, specific_event):
     """Main logic for the acquisition loop."""
 
     # Parse configuration
-    deviceName = setup.get('deviceName', 'Anonymous device')
-    acqLabels = setup.get('acqLabels', ["A1", "A2", "A3", "A4", "A5", "A6"])
-    acqChannels = setup.get('acqChannels', [0, 1, 2, 3, 4, 5])
+    device_name = setup.get('device_name', 'Anonymous device')
+    acq_labels = setup.get('acq_labels', ["A1", "A2", "A3", "A4", "A5", "A6"])
+    acq_channels = setup.get('acq_channels', [0, 1, 2, 3, 4, 5])
     # resolution = setup.get('resolution', [ 4,  1,  1,  1,  1, 10,
     #                                      10, 10, 10, 6, 6])
-    samplingRate = setup.get('samplingRate', 1000)
+    sampling_rate = setup.get('sampling_rate', 1000)
     master = setup.get('master', 0)
-    syncInterval = setup.get('syncInterval') * 60
-    digitalOutput = setup.get('digitalOutput', [1, 1])
-    nSamples = setup.get('nSamples', 1000)
+    sync_interval = setup.get('sync_interval') * 60
+    digital_output = setup.get('digital_output', [1, 1])
+    nsamples = setup.get('acq_nsamples', 1000)
     master = setup.get('master', 0)
     support = setup.get('support', 0)
     time_profile = setup.get('time_profile', 1)
@@ -218,10 +217,8 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
     interface = setup.get('interface', 1)
     port = setup.get('port', 8090)
 
-    print port
-
     # Add subfolder for Device
-    path_to_save = os.path.join(path_to_save, deviceName)
+    path_to_save = os.path.join(path_to_save, device_name)
     if not os.path.exists(path_to_save):
         os.makedirs(path_to_save)
 
@@ -229,7 +226,7 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
     # (restart the reading in the event of a disruption)
     while True:
 
-        device = __find_bitalino(macAddress, deviceName,
+        device = __find_bitalino(macAddress, device_name,
                                  general_event, specific_event)
 
         # Check for event interruption
@@ -237,7 +234,7 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
             break
 
         # Start Acquisition
-        device.start(samplingRate, acqChannels)
+        device.start(sampling_rate, [channel - 1 for channel in acq_channels])
         device.socket.settimeout(5)
 
         # Get initial time of acquisition
@@ -245,9 +242,9 @@ def _process(path_to_save, macAddress, setup, general_event, specific_event):
         i_datetime = i_datetime_acq
 
         # Read from device
-        __read_bitalino(device, path_to_save, macAddress, deviceName, setup,
-                        acqChannels, acqLabels, digitalOutput,
-                        samplingRate, nSamples, syncInterval, i_datetime,
+        __read_bitalino(device, path_to_save, macAddress, device_name, setup,
+                        acq_channels, acq_labels, digital_output,
+                        sampling_rate, nsamples, sync_interval, i_datetime,
                         specific_event, general_event,
                         mem_profile, time_profile,
                         master, support, interface, port)
