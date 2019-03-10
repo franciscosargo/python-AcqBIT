@@ -14,6 +14,7 @@ python-acqBIT Application, with the use of h5py API.
 """
 import os
 import pdb
+import time
 
 import h5py as h5
 import matplotlib.pyplot as plt
@@ -283,3 +284,9 @@ def close_file(r_group, macAddress, device_name, setup,
     attrs['nsamples'] = nsamples
     attrs['device_name'] = device_name
     attrs['sampling_rate'] = sampling_rate
+
+    t = time_init_acq
+    fs = t - int(t)
+    time_str = time.strftime("%H:%M:%S.", 
+                             time.localtime(t)) + str(round(fs, 3))[2:]
+    attrs['time'] = time_str
