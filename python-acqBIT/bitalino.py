@@ -447,7 +447,7 @@ class BITalino(object):
             else:
                 number_bytes = int(math.ceil((52.+6.*(nChannels-4))/8.))
             
-            dataAcquired = numpy.zeros((nSamples, 5 + nChannels), dtype='uint32')
+            dataAcquired = numpy.zeros((nSamples, 5 + nChannels), dtype='uint16')
             for sample in range(nSamples):
                 Data = self.receive(number_bytes)
                 decodedData = list(struct.unpack(number_bytes * "B ", Data))

@@ -89,15 +89,15 @@ def __read_bitalino(device, path_to_save, macAddress, device_name, setup,
     file_path = os.path.join(path_to_save, filename)
     prof_file_path = os.path.join(path_to_save, prof_filename)
 
+    # Vulnerability
     ioos.setup_h5file_os(file_path, macAddress)
 
     # Acquisition Loop
     try:
-
         f = ioos.open_h5file_os(file_path)
         # Get base group from file
         r_group = ioos.get_root_group(f)
-        ioos.overwrite_dsets(r_group, acq_channels)
+        ioos.overwrite_dsets(r_group, acq_channels, acq_labels)
 
         if interface:
             UDP_IP = "127.0.0.1"
@@ -135,7 +135,7 @@ def __read_bitalino(device, path_to_save, macAddress, device_name, setup,
                 # Check for time profiling
                 if time_profile:
                     # Allocate values to deal with timed operations
-                    # during acquisiton
+                    # during acquisition
                     time_after_read = timing()
                     profile_list[2] = time_after_read
 
@@ -169,8 +169,6 @@ def __read_bitalino(device, path_to_save, macAddress, device_name, setup,
                 # Save time quantifiaction on file
                 if time_profile or mem_profile:
                     with open(prof_file_path, 'a') as w:
-                        #for profile_item in profile_list:
-                            #print >> w, profile_item
                         print >> w, profile_list
                         print >> w, '\n'
 
@@ -183,12 +181,27 @@ def __read_bitalino(device, path_to_save, macAddress, device_name, setup,
                                                          macAddress)
                 break
 
-    finally:
+    except Exception as e:
+        print e
 
+    finally:
         if support:
-            ioos.write_sp_h5file(r_group, support, acq_channels)
+            ioos.write_support_to_h5file(r_group)
+
+        if time_init_acq:
+            # Close the file, under the condition of 
+            ioos.close_file(r_group, macAddress, device_name, setup,
+                            acq_channels, acq_labels, digital_output,
+                            sampling_rate, nsamples, sync_delta, i_datetime,
+                            mem_profile, time_profile,
+                            master, support, interface, port,
+                            time_init_acq)
 
         f.close()
+
+        if not time_init_acq:
+            # If no acquistion data delete file (No need)
+            os.remove(file_path)
 
         if interface:
             s.close()
