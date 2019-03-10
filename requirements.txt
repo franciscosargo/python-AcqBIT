@@ -1,4 +1,3 @@
-bitalino==1.2.1
 h5py==2.9.0
 pystray==0.14.4
 psutil==5.5.1

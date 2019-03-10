@@ -17,12 +17,10 @@ import pdb
 import time
 
 import h5py as h5
-import matplotlib.pyplot as plt
 import numpy as np
 
 import support as sp
 
-import pdb
 
 
 def open_h5file_os(path_file):
