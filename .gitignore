@@ -1,7 +1,7 @@
-settings.json
 **build
 **dist
 **.spec
 **.cfg
 **.pyc
 **.json
+config.json

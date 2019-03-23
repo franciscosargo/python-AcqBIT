@@ -34,13 +34,8 @@ from pystray import MenuItem as item
 
 from bitalino_process import _process
 
-#reload(sys)
-#sys.setdefaultencoding('utf8')
-
-
-
-
 logger = logging.getLogger(__name__)
+
 
 # Icon methods
 def set_state(v):
@@ -49,7 +44,7 @@ def set_state(v):
         state_list[v] = not state_list[v]
         specific_event_list[v].set()
     return inner
-    
+
 
 def get_state(v):
     def inner(item):
@@ -70,23 +65,21 @@ def main():
     global general_event
     global specific_event
     global icon
- 
+
     # Open Configuration file
-    with open(os.path.join(os.getcwd(), '..', 'config.json')) as json_data_file:
+    conf_path = os.path.join(os.getcwd(), '..', 'config.json')
+    with open(conf_path) as json_data_file:
         mdata = json.load(json_data_file)
         print(mdata)
 
     # Create folder for the acquisition
     activity_name = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
     print(activity_name)
-    path_name = os.path.join('~', 'Desktop', 'acqBIT', mdata['user'], activity_name)   
+    path_name = os.path.join('~', 'Desktop', 
+                             'acqBIT', mdata['user'], activity_name)   
     path_to_save = os.path.expanduser(path_name)
-
     if not os.path.exists(path_to_save):
         os.makedirs(path_to_save)
-
-    # Open General event for acquisition
-    general_event = mp.Event()
 
     # Start acquisition
     devices = mdata['devices']
@@ -94,27 +87,44 @@ def main():
     process_list = []
     state_list = []
     macAddress_list = devices.keys()
+    general_event = mp.Event()  # start general event
+
+    # loop each device and start process
     for macAddr in macAddress_list:
-        # Start process
+
+        # launch acquisition process
         specific_event = mp.Event()
-        p = mp.Process(target=_process, args=(path_to_save, macAddr, devices[macAddr], 
+        p = mp.Process(target=_process, args=(path_to_save, macAddr, 
+                                              devices[macAddr], 
                                               specific_event, general_event))
         p.start()
+
+        # add to list of running processes
         specific_event_list.append(specific_event)
         process_list.append(p)
         state_list.append(1)
 
     # Create Icon
-    image = Image.open(os.path.join( os.getcwd(), '..', 'BITALINO-logo.png'))
+    # set image
+    image = Image.open(os.path.join(os.getcwd(), '..',
+                                    'BITALINO-logo.png'))
     icon = pystray.Icon("name", image)
-    icon_menu = [item('{}'.format(macAddr), set_state(i), checked=get_state(i))
-                 for i, macAddr in enumerate(macAddress_list)]
+    
+    # create menu
+    icon_menu = []
+    for i, macAddr in enumerate(macAddress_list):
+        setup = devices[macAddr]
+        device_name = setup['device_name']
+        item_obj = item('{}'.format(device_name), set_state(i),
+                        checked=get_state(i))
+        icon_menu.append(item_obj)
     icon_menu = icon_menu + [item("Stop Acquisition", stop)]
     icon.menu = icon_menu
 
+    # run icon
     icon.run()
     icon.stop()
 
-if __name__ == '__main__':    
+if __name__ == '__main__':
     mp.freeze_support()
     main()    
