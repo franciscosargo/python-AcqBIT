@@ -32,10 +32,10 @@ import pystray
 from PIL import Image
 from pystray import MenuItem as item
 
-from bitalino_process import _process
+import acqBIT.bitalino_process as bp
 
+_process = bp._process
 logger = logging.getLogger(__name__)
-
 
 # Icon methods
 def set_state(v):
@@ -67,7 +67,7 @@ def main():
     global icon
 
     # Open Configuration file
-    conf_path = os.path.join(os.getcwd(), '..', 'config.json')
+    conf_path = os.path.join(os.getcwd(), 'config.json')
     with open(conf_path) as json_data_file:
         mdata = json.load(json_data_file)
         print(mdata)
@@ -106,8 +106,9 @@ def main():
 
     # Create Icon
     # set image
-    image = Image.open(os.path.join(os.getcwd(), '..',
-                                    'BITALINO-logo.png'))
+    img_path = os.path.join(os.getcwd(), 
+                            'BITALINO-logo.png')
+    image = Image.open(img_path)
     icon = pystray.Icon("name", image)
     
     # create menu

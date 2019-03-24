@@ -37,7 +37,8 @@ def setup_h5file_os(path_file, macAddress):
     """Setup h5 file used to save the whole acquisition data, 
        by copying existent template."""
 
-    dummy_path_file = os.path.join(os.getcwd(), '../add_ons', 
+    
+    dummy_path_file = os.path.join(os.getcwd(), 'add_ons', 
                                   'opensignals_201604120230_2019-02-03_13-53-11.h5')
     ## Copy the contents from the dummy file
     with h5.File(dummy_path_file, 'r+') as dummy_f, h5.File(path_file, 'w') as f:
