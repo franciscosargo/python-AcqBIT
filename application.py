@@ -105,12 +105,6 @@ def main():
         state_list.append(1)
 
     # Create Icon
-    # set image
-    img_path = os.path.join(os.getcwd(), 
-                            'BITALINO-logo.png')
-    image = Image.open(img_path)
-    icon = pystray.Icon("name", image)
-    
     # create menu
     icon_menu = []
     for i, macAddr in enumerate(macAddress_list):
@@ -120,9 +114,14 @@ def main():
                         checked=get_state(i))
         icon_menu.append(item_obj)
     icon_menu = icon_menu + [item("Stop Acquisition", stop)]
-    icon.menu = icon_menu
 
+    # set image
+    img_path = os.path.join(os.getcwd(), 
+                            'BITALINO-logo.png')
+    image = Image.open(img_path)
+    
     # run icon
+    icon = pystray.Icon("name", image, menu=icon_menu)
     icon.run()
     icon.stop()
 
