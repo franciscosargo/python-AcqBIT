@@ -3,5 +3,4 @@
 **.spec
 **.cfg
 **.pyc
-**.json
-config.json
+settings.json
